@@ -21,6 +21,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      - name: Install Dependencies
+        run: |
+          sudo apt update && \
+          sudo apt install -y emacs-nox imagemagick
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup Pages
