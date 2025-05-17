@@ -4,3 +4,4 @@ This repository publishes my personal webpage to [[https://fbrosda.github.io]] v
 
 * TODOs
 - [ ] Avoid rerunning ~apt install~ for the dependencies on every commit. Idea: Create a custom docker image, which contains the dependencies and use it.
+  
