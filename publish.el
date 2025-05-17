@@ -66,7 +66,7 @@ current project."
         (format "[[file:%s][%s]] %s" filename  title date))
     nil))
 
-(let* ((project-root-dir (project-root (project-current t)))
+(let* ((project-root-dir (project-root (project-current)))
        (publishing-dir (expand-file-name "publish/" project-root-dir))
        (content-dir (expand-file-name "org/" project-root-dir))
        (posts-dir (expand-file-name "posts/" content-dir))
