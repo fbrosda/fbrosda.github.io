@@ -1,0 +1,15 @@
+#+title: Impressum
+
+* Angaben gemäß § 5 des Telemediengesetzes
+
+** Name des Anbieters
+{{{author}}}\\
+{{{address}}}
+
+** Kontaktdaten
+E-Mail: {{{email}}}\\
+Internetseite: {{{host}}}
+
+** Datenschutz
+Die Datenschutzhinweise finden Sie unter [[file:datenschutz.org]]
+

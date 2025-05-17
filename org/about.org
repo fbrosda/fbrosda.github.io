@@ -1,0 +1,43 @@
+#+title: Über mich
+
+Hi, ich bin Fabian und du hast meine persönliche Seite im WWW gefunden. Hier
+findest du noch ein paar Informationen zu mir und meiner Motivation, für dieses
+öffentliche Notizbuch.
+
+* Motivation
+Vorrangiges Ziel ist wie der Name schon sagt mein eigenes digitales Notizbuch.
+Dabei möchte ich mich nicht auf einen bestimmten Themenbereich oder eine feste
+Form beschränken, sondern dient als kreatives Spielfeld, um verschiedenste Ideen
+auszuprobieren.
+
+Die Seite ist insgesamt bewusst minimalistisch gehalten und kommt ohne Tracking
+und Javascript aus.  Dadurch ist die Seite gleichzeitig einfacher zu pflegen und
+schneller geladen, ohne wesentliche Funktionen verzichten zu müssen.
+
+* Persönliches
+Ich habe Informatik studiert und arbeite als Software Entwickler.  Dabei
+interessiere ich mich vor allem für effiziente Algorithmen und Datenstrukturen,
+sowie eine les- und wartbare Umsetzung.  Wenn ich in meiner Freizeit am PC
+sitze, dann entweder um an Open Source Software zu basteln oder für eine Runde
+nethack.  Abseits der virtuellen Welt tanze ich Tango und bin in den Bergen vor
+meiner Haustür unterwegs.
+
+* Publikationen
+- F. Brosda. /Optimierte Routenplanung im Outdoortourismus unter
+  Berücksichtigung der Frequentierung der Wanderwege/. Ma Arbeit, 2022
+- A. A. Gonzalez, R. Bertschinger, F. Brosda, T. Dahmen, P. Thumm, &
+  D. Saupe. /Kinetic analysis of oxygen dynamics under a variable work
+  rate/. Human movement science, 66, 2019.
+- T. Dahmen, und F. Brosda. /Robust computation of minimum-time pacing
+  strategies on realistic road cycling tracks/. Bibliothek der
+  Universität Konstanz, 2016.
+- F. Brosda. /Optimale Kontrolle von Geschwindigkeitssteuerung im Radsport in
+  verschiedenen Frameworks/. Ba Arbeit, 2015.
+
+* Kontaktmöglichkeiten
+Ich freue mich jederzeit über Feedback und Kommentare.  Ich bin auf folgenden Wegen erreichbar:
+
+- {{{email}}}
+- [[https://github.com/fbrosda][GitHub]]
+- [[https://www.linkedin.com/in/fabian-b-b0a28428a/][LinkedIn]]
+- [[https://www.outdooractive.com/de/member/17544636/][outdooractive]]

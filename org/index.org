@@ -1,0 +1,33 @@
+#+title: Fabians Notizbuch
+
+Herzlich Willkommen in meinem privaten Winkel des Internet.  Auf dieser Seite
+veröffentliche ich Texte zu den unterschiedlichsten Themen, die mich gerade
+interessieren.  Das Ziel ist hauptsächlich ein persönliches Archiv an Gedanken,
+Ideen und Texten zu schaffen. Darüber hinaus dient es gleichzeitig als Ansporn
+zum regelmäßigen Schreiben.  Trotzdem hoffe ich, dass hin und wieder auch ein
+Beitrag dabei ist, der auch für andere interessant oder hilfreich ist.
+
+Solltest du Anmerkungen, Lob oder Kritik haben, freue ich mich über eine kurze
+Nachricht.  Kontaktmöglichkeiten und ein paar Informationen zu mir, findest du
+[[file:about.org][hier]].
+
+* Letzte Einträge
+:PROPERTIES:
+:CUSTOM_ID: recent-posts
+:END:
+
+#+begin_src elisp :exports results
+(let ((dir "posts/")
+      (res (list)))
+  (dolist (filename (directory-files "./posts" nil ".*\.org") res)
+    (unless (equal "rss.org" filename)
+      (with-current-buffer (find-file-noselect (expand-file-name filename dir))
+        (let* ((attrs (org-collect-keywords '("TITLE" "DATE")))
+               (title (cadar attrs))
+               (date (cadadr attrs)))
+          (add-to-list 'res (list date filename title))))))
+  (mapcar (lambda (elem)
+            (list (format "[[file:%s%s][%s]]" dir (cadr elem) (caddr elem))
+                  (format-time-string "%a %d %B %Y" (date-to-time (car elem)))))
+          (take 10 (reverse (sort res :key #'car)))))
+#+end_src

@@ -1,0 +1,37 @@
+#+title: Skitour: Höferspitze
+#+date: <2022-03-04 Fr>
+
+Gleich der erste Eintrag hat nicht direkt etwas mit Software zu tun.
+Stattdessen ein paar Eindrücke von der letzten Skitour.  Allerdings
+kann so auch gleich das css zum Einbinden von Bildern getestet werden.
+
+* Eindrücke von der Tour
+Über die letzten Wochen waren sowohl das Wetter, als auch der Schnee
+großartig, wie man an den Bildern erkennt.  Nach der letzten Prüfung
+habe ich deswegen die Zeit genutzt um eine Skitour von Baad auf die
+Höferspitze im Kleinwalsertal zu unternehmen.
+
+#+caption: Blick auf den Widderstein während des Aufstiegs
+#+name: ascent
+#+ATTR_HTML: :src /media/images/Höferspitze_Widderstein.webp
+[[../../media/images/Höferspitze_Widderstein.webp]]
+
+Nach einem kurzen Stück auf schmalem Grat, angekommen am Gipfelkreuz:
+
+#+caption: Gipfelkreuz
+#+ATTR_HTML: :src /media/images/Höferspitze_Gipfel.webp
+[[../../media/images/Höferspitze_Gipfel.webp]]
+
+Zum Schluss noch ein Bild von der Aussicht nach Süden:
+
+#+caption: Ausblick am Gipfel
+#+ATTR_HTML: :src /media/images/Höferspitze_Panorama.webp
+[[../../media/images/Höferspitze_Panorama.webp]]
+
+
+* Details zur Route
+Eine ausführliche Beschreibung der Tour kann man hier finden:
+
+#+begin_export html
+<script type="text/javascript" src="https://www.outdooractive.com/en/embed/54325348/js?mw=false"></script>
+#+end_export

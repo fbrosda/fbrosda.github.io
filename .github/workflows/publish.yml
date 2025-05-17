@@ -1,4 +1,4 @@
-name: Deploy static content to Pages
+name: org-publish
 
 on:
   push:
@@ -30,8 +30,7 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Build page
-        run: |
-          make all
+        run: make all
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

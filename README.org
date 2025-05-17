@@ -1,0 +1,6 @@
+#+title: Personal webpage
+
+This repository publishes my personal webpage to [[https://fbrosda.github.io]] via Github Actions and org-publish.
+
+* TODOs
+- [ ] Avoid rerunning ~apt install~ for the dependencies on every commit. Idea: Create a custom docker image, which contains the dependencies and use it.
