@@ -5,11 +5,11 @@ CSS_DIR := css/
 
 all: publish
 
-publish: $(PUB_DIR)$(CSS_DIR)*.css $(PUB_DIR)$(MEDIA_DIR)*.svg $(PUB_DIR)*.ico # $(PUB_DIR)$(IMG_DIR)*.webp
+publish: $(PUB_DIR)$(CSS_DIR)*.css $(PUB_DIR)$(IMG_DIR)*.webp $(PUB_DIR)$(MEDIA_DIR)*.svg $(PUB_DIR)*.ico
 	emacs --batch --no-init --load publish.el --funcall org-publish-all
 
-# $(PUB_DIR)$(IMG_DIR)%.webp: $(IMG_DIR)%.jpg | $(PUB_DIR)$(IMG_DIR)
-# 	mogrify -strip -auto-orient -resize '1920x1080' -format 'webp' -path $| $^
+$(PUB_DIR)$(IMG_DIR)%.webp: $(IMG_DIR)%.jpg | $(PUB_DIR)$(IMG_DIR)
+	mogrify -strip -auto-orient -resize '1920x1080' -format 'webp' -path $| $^
 
 $(PUB_DIR)$(CSS_DIR)%.css: $(CSS_DIR)%.css | $(PUB_DIR)$(CSS_DIR)
 	cp $^ $|
