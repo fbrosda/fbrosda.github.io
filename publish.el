@@ -117,6 +117,7 @@ current project."
            :publishing-function org-rss-publish-feed
            :auto-sitemap t
            :rss-extension "xml"
+           :rss-image-url ,(concat user-blog-domain "/favicon.ico")
            :section-numbers nil
            :sitemap-title ,(concat (user-full-name) "'s Feed")
            :sitemap-filename "rss.org"
