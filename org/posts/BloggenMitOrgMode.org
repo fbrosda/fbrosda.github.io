@@ -38,7 +38,7 @@ Zu guter Letzt sollte auf der Startseite noch eine Übersicht der letzten 10 Art
   (mapcar (lambda (elem)
             (list (format "[[file:%s%s][%s]]" dir (cadr elem) (caddr elem))
                   (format-time-string "%a %d %B %Y" (date-to-time (car elem)))))
-          (take 10 (reverse (seq-sort-by (lambda (x) (org-time-string-to-absolute (car x))) #'> res))))
+          (take 10 (reverse (seq-sort-by (lambda (x) (org-time-string-to-absolute (car x))) #'< res))))
 #+end_src
 
 ~seq-sort-by~ wird aus Kompatibilitätsgründen verwendet, da ~sort~ in emacs < 30, noch keine Funktion ~KEY~ übergeben werden kann. 
