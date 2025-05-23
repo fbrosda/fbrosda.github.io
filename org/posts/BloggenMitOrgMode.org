@@ -1,0 +1,52 @@
+#+title: Bloggen mit Org Mode
+#+date: <2025-05-23 Fr>
+
+Dieser Eintrag beschreibt die wesentlichen Anforderungen und die sich daraus ergebende Umsetzung meines Blog Setups.
+
+* Anforderungen
+Ziel ist eine einfache Seite, welche bestenfalls komplett ohne Javascript auskommt, ein einfaches, aber trotzdem responsives und ansprechendes Layout umsetzt.  Zudem sollten Formatierungen für Code, sowie Bilder einfach einzubinden sein.
+
+Technologisch sollte das ganze möglichst wenig Abhängigkeiten benötigen und am Ende einen Satz statischer html-Dateien, sowie Bilder und Stylesheet liefern, welche unabhängig von einem speziellen Hoster sind.
+
+Zuletzt sollte auch ein RSS-Feed unterstützt werden.
+
+* Motivation
+Da ich emacs und org-mode bereits für verschiedene Dokumente und Präsentationen verwende und sowohl mit dem pdf, als auch dem html-Export gute Erfahrungen gemacht habe, lag es nahe die Möglichkeiten auszuloten, auch wenn das Setup ggf. etwas umständlicher ist, als mit anderen Lösungen.  In diesem Fall sollte das ganze trotzdem unabhängig von meiner eigentlichen emacs Konfiguration bleiben, um so portable auch z.B. via Github-Actions ausführbar zu sein.
+
+* Umsetzung
+Das ganze besteht im wesentlichen aus zwei Teilen.  Zum einen die Konfiguration von org-publish, um die org Dateien in html zu übersetzen und zum anderen das Stylesheet für die Darstellung.
+
+** org-publish
+Das Ergebnis nutzt nun im wesentlichen org-publish und richtet sich nach dem [[https://orgmode.org/worg/org-tutorials/org-publish-html-tutorial.html][offiziellen Tutorial]].  Das ganze wird über ein [[https://github.com/fbrosda/fbrosda.github.io/blob/main/Makefile][Makefile]] aufgerufen, welches zusätzlich die Bilder nach webp transformiert und Medien und Stylesheet in den ~publish/~ Ordner verschiebt.  Die html Seiten werden dann mit org-publish direkt in dem genannten Ordner erzeugt, sodass letztlich genau dieser eine Ordner von einem beliebigen Webserver ausgeliefert werden kann.
+
+Die Konfiguration erfolgt in der [[https://github.com/fbrosda/fbrosda.github.io/blob/main/publish.el][publish.el]], zusätzliche Abhängigkeiten für den RSS-Feed und das Syntax Highlighting von Code Blöcken liegen im ~bin/~ Ordner und sind Teil des Repositories.  Somit wird letztlich nur emacs, make und für die Bilder imagemagick als externe Abhängigkeit benötigt.
+
+Der RSS-Feed benötigte etwas extra Arbeit, da ox-rss.el davon ausgeht, dass alle Blogeinträge in einer Datei liegen.  Das Setup hierzu wurde mit kleinen Anpassungen von [[https://writepermission.com/org-blogging-rss-feed.html][hier]] übernommen.  Aktuell fehlt noch eine kurze Zusammenfassung, für jeden Feed Eintrag.
+
+Zu guter Letzt sollte auf der Startseite noch eine Übersicht der letzten 10 Artikel dargestellt werden.  Dies wird mit org-babel und etwas elisp umgesetzt, welches beim bauen der statischen Seiten automatisch ausgeführt wird.
+
+#+begin_src elisp
+(let ((dir "posts/")
+      (res (list)))
+  (dolist (filename (directory-files "./posts" nil ".*\.org") res)
+    (unless (equal "rss.org" filename)
+      (with-current-buffer (find-file-noselect (expand-file-name filename dir))
+        (let* ((attrs (org-collect-keywords '("TITLE" "DATE")))
+               (title (cadar attrs))
+               (date (cadadr attrs)))
+          (add-to-list 'res (list date filename title))))))
+  (mapcar (lambda (elem)
+            (list (format "[[file:%s%s][%s]]" dir (cadr elem) (caddr elem))
+                  (format-time-string "%a %d %B %Y" (date-to-time (car elem)))))
+          (take 10 (reverse (seq-sort-by (lambda (x) (org-time-string-to-absolute (car x))) #'> res))))
+#+end_src
+
+~seq-sort-by~ wird aus Kompatibilitätsgründen verwendet, da ~sort~ in emacs < 30, noch keine Funktion ~KEY~ übergeben werden kann. 
+
+** Styling
+Die Anforderungen an Layout und Responsiveness sind komplett in css umgesetzt. Das Farbschema orientiert sich an dem [[https://github.com/protesilaos/modus-themes][modus-theme]] und sorgt so auch für einen angemessenen Kontrast zwischen Hinter- und Vordergrund.  Dark-mode, Anpassungen für unterschiedlichen Bildschirmgrößen sowie zum Drucken der Seiten sind mit media Querries umgesetzt.
+
+Noch offen ist eine Möglichkeit Bilder maximiert und evtl. auch in einer Galerie anzuzeigen.  Zunächst reich die Möglichkeit einzelne Bilder via Rechtsklick in einem neuen Fenster zu öffnen, solange die Anzahl der Bilder je Eintrag überschaubar bleibt.
+
+* Fazit
+Mit dem aktuellen Setup bin ich sehr zufrieden, jedoch hat insbesondere das Aufsetzen von org-publish mit dem doch recht großen Funktionsumfang und vielen Konfigurationsmöglichkeiten einige Zeit in Anspruch genommen.  Das css-Styling war dagegen recht schnell umgesetzt.
