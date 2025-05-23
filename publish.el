@@ -12,9 +12,6 @@
 (require 'ox-rss)
 (require 'htmlize)
 
-(set-language-environment 'German)
-(prefer-coding-system 'utf-8)
-
 (defun file-to-string (filename root-dir)
   (with-temp-buffer
     (insert-file-contents

@@ -25,7 +25,7 @@ jobs:
         run: |
           sudo apt update && \
           sudo apt install -y emacs-nox imagemagick language-pack-de && \
-          sudo locale-gen de_DE.UTF-8 && sudo update-locale && \
+          sudo locale-gen de_DE.UTF-8 && sudo update-locale && sudo update-locale 'LANG="de_DE.UTF-8"' && \
           mkdir ~/.emacs.d
       - name: Checkout
         uses: actions/checkout@v4
