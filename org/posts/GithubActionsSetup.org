@@ -1,0 +1,78 @@
+#+title: Github Actions für org-publish
+#+date: <2025-06-17 Di>
+
+Nachdem in [[file:BloggenMitOrgMode.org][Bloggen mit org-mode]] das grundsätzliche Setup zu org-publish beschrieben ist, sind im folgenden noch ein paar Details zur Kombination mit Github Actions dokumentiert, welche aktuell verwendet werden, um aus den org-Dateien die finalen HTML-Seiten zu bauen.
+
+Dadurch, dass der eigentliche Build-Prozess via ~make~ umgesetzt ist, braucht es eigentlich nicht mehr als ~make all~, um die ganze Seite zu bauen.  Allerdings müssen davor noch Abhängigkeiten installiert werden und danach müssen die Artefakte noch veröffentlicht werden.  Die gesamte Konfiguration ist am Ende der Seite aufgeführt, davor werden noch einige der Punkte genauer erläutert.
+
+* Git Branch Setup
+Mit ~on.push.branches: 'main'~ wird festgelegt, dass die Pipeline nur auf dem main Branch ausgeführt wird.  Dadurch kann man in anderen Branches Einträge verfassen und committen oder andere Dinge ausprobieren, ohne diese zu deployen und hat trotzdem alles im Git festgehalten.
+
+* Sprache festlegen
+Da die Seite auf deutsch ist, braucht es noch eine extra Einstellung mit ~env.LANG~, da sonst Teile der Webseite auf Englisch dargestellt werden, da dies die Standardsprache in der Buildumgebung ist.
+
+* Actions Definition
+Die eigentlichen Schritte sind unter ~jobs.steps~ eingetragen.  Besonders ist dabei nur der erste Schritt, welcher die benötigten Abhängigkeiten installiert, welche da wären:
+
+- emacs :: Aus offensichtlichen Gründen
+- imagemagick :: Zur Bearbeitung der Bilder
+- language-pack-de :: Zur korrekten Sprachunterstützung
+
+Zusätzlich müssen dann noch die locales aktualisiert werden und als letztes muss noch der Ordner ~.emacs.d~ angelegt werden, da sonst der Aufruf von ~project-root~ später fehlschlägt.
+
+Die restlichen Schritte basieren auf der Dokumentation von Github zum [[https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#creating-a-custom-github-actions-workflow-to-publish-your-site][Deployment via Github Actions]].
+
+* Einstellungen in der Weboberfläche
+Unter ~https://github.com/<user>/<repository>/settings/pages~ muss dann noch als Quelle unter 'Build and deployment' Github Actions ausgewählt werden.  Danach sollte die Build-Pipeline beim nächsten Commit automatisch ausgeführt werden.
+
+* Konfiguration
+#+begin_src yaml
+name: org-publish
+
+on:
+  push:
+    branches:
+      - "main"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+env:
+  LANG: "de_DE.UTF-8"
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Dependencies
+        run: |
+          sudo apt update && \
+          sudo apt install -y emacs-nox imagemagick language-pack-de && \
+          sudo update-locale && \
+          mkdir ~/.emacs.d
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Build page
+        run: make all
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './publish'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+#+end_src
+
+* Probleme
+Das Setup funktioniert soweit gut, das einzige Problem ist aktuell, dass die Abhängigkeiten jedes mal neu installiert werden, da stets ein blankes ubuntu-latest Image gestartet wird.  Hier wäre vermutlich der richtige Weg noch ein eigenes Docker-Image zu bauen, welches die benötigten Pakete bereits enthält und dieses zu verwenden.  Solang die Seite jedoch nur gelegentlich aktualisiert wird, bin ich mit dem Workflow zufrieden.
