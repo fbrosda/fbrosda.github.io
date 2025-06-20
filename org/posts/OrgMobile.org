@@ -1,0 +1,112 @@
+#+title: Org Mobile Sync Setup
+#+date: <2025-06-20 Fr>
+
+Notizen, Todo-Listen und auch diese Webseite werden von mir in [[https://orgmode.org/][org-mode]] geschrieben und verwaltet.  Insbesondere ein spontaner Einfall unterwegs wird dabei auf dem Mobiltelefon gespeichert, natürlich ebenfalls in einem org-Dokument, via [[https://www.orgzlyrevived.com/][Orgzly Revived]].  Dabei besteht dann natürlich die Notwendigkeit, die unterwegs gemachten Änderungen mit den Dateien auf dem PC zu synchronisieren, wobei ab und an auch Änderungen auf beiden Seiten passieren, bevor die Dateien wieder zusammengeführt werden. Dementsprechend ist neben dem reinen Sync auch eine Möglichkeit zum Diffen und zum Auflösen von Konflikten notwendig.  Hierzu verwende ich mittlerweile [[https://syncthing.net/][Syncthing]] und [[https://git-scm.com][Git]].
+
+* Org Mobile
+Bevor ich das eigentliche Setup vorstelle, noch ein kurzer Exkurs zu [[https://orgmode.org/manual/Org-Mobile.html][Org Mobile]], welches auf den ersten Blick genau dafür geschaffen scheint, org Dateien von einem Mobilgerät mit einem PC zu synchronisieren.  Hierzu muss man allerdings wissen, dass Org Mobile speziell auf [[https://mobileorg.github.io/][MobileOrg]] zugeschnitten ist, eine iOS App. Die Version [[https://github.com/matburt/mobileorg-android][MobileOrg Android]] dagegen ist leider schon seit fast 10 Jahren verwaist.  Der Versuch Org Mobile mit Orgzly zu verwenden war leider auf Dauer nicht zufriedenstellen.
+
+Die grundsätzliche Konfiguration und das kopieren von Änderungen auf das Mobilgerät via ~org-mobile-push~ funktioniert dabei zunächst sehr gut.  Dabei werden zusätzliche Dateien ~index.org~ und ~mobileorg.org~ angelegt, welche grundsätzlich ganz praktisch sind.  Zusätzlich, kann auch die Agenda in eine Org Datei geschrieben werden, sodass diese nicht von der mobilen App extra erzeugt werden müsste, da Orgzly dies aber problemlos kann, kann dieser Teil deaktiviert werden.
+
+Schwieriger ist es dann mit [[https://orgmode.org/manual/Pulling-from-the-mobile-application.html][~org-mobile-pull~]] die Änderungen vom Telefon wieder zurück auf den PC zu bekommen.  Org Mobile synchronisiert dabei nur Einträge, welche in der Datei ~mobileorg.org~ gemacht werden.  Für neu angelegte Einträge ist dies zunächst einmal kein großes Hindernis.  Diese werden in eine Inbox kopiert, welche via ~org-mobile-inbox-for-pull~ spezifiziert werden kann und können dann mit ~org-refile~ entsprechend einsortiert werden.  Soweit funktioniert das Setup gut.  Das Problem ist, dass auch Änderungen an bestehenden Einträgen in einem speziellen Format in die Datei ~mobileorg.org~ geschrieben werden müssen, damit ~org-mobile-pull~ diese erkennt, verarbeitet und falls es keine Konflikte gibt, direkt in die bestehenden Dateien integriert.  Leider funktioniert dies eben nur dann, wenn die App auf dem Telefon, genau diese Einträge erstellt.  Änderungen, welche in Orgzly in anderen Dateien gemacht werden, werden schlicht nicht synchronisiert.  Da soweit mir bekannt leider MobileOrg die einzige App ist, welche dieses Format verwendet ist eine sinnvolle Synchronisation mit Org Mobile auf Android leider nicht möglich.
+
+Gleichzeitig stellt sich die Frage, ob es der Mühe wert wäre, Org Mobile noch zu unterstützen, da der weiter unten vorgeschlagene Workflow mehr oder weniger die selben Möglichkeiten bietet und zusätzlich auf das Visualisieren und Mergen von Konflikten alle Möglichkeiten von Git bietet.
+
+* Syncthing
+Davor allerdings noch ein paar Worte zu Syncthing.  Sowohl Org Mobile, als auch mein eigener Workflow benötigen einen zusätzlichen Schritt, um die Dateien von dem Server auf das Mobilgerät zu synchronisieren.  Da man dann sowieso z.B. Syncthing benötigt, stellt sich die Frage, ob das alleine nicht ausreichen würde.  Meine Motivation für die zusätzlichen Schritte via Git sind zum einen die einfache Möglichkeit nur bestimmte Dateien auf das Mobilgerät zu kopieren und nicht den kompletten Ordner mit org Dateien, ohne dass ich diese auf dem PC gesondert ablegen müsste.  Zum anderen bietet Git neben der Versionierung eben auch eine hervorragende Möglichkeit Konflikte aufzulösen, falls eine Datei auf beiden Seiten verändert wurde.
+
+* Git Sparse Checkout
+Dies führt mich zu dem hier verwendeten Workflow via git worktree und sparse checkout.  Zunächst einmal müssen dafür die org Dateien in einem Git Repository verwaltet werden, was aber in meinen Augen, selbst ohne den Sync auf ein Mobilgerät nur Vorteile durch die Versionierung bietet.
+
+** Setup
+Das initiale Setup läuft dabei wie folgt. Zunächst wird ein eigener Branch erstellt, welcher für das Mobilgerät verwendet wird, welchen ich schlicht ~mobile~ genannt habe.
+
+#+begin_src bash
+git branch mobile main
+#+end_src
+
+Dieser kann dann in einem separaten Ordner via ~git worktree~ ausgecheckt werden.  Dies ist dann auch der Ordner, welcher später mittels Syncthing zwischen dem Server und dem Telefon synchronisiert wird.
+
+#+begin_src bash
+git worktree add ../android/org mobile
+#+end_src
+
+Als letztes wird dann mittels ~git sparse-checkout~ festgelegt, welche Dateien in dem Arbeitsverzeichnis vorhanden sein sollen.  Dies ist der wichtigste Teil, um eben nur ausgewählte Dateien zu synchronisieren.  Gleichzeitig kann der sparse checkout jederzeit angepasst werden:
+
+#+begin_src bash
+git sparse-checkout set --cone 
+git sparse-checkout add wiki/
+git sparse-checkout add 2025
+#+end_src
+
+Die Einrichtung von Syncthing ist hier nicht näher beschrieben.
+
+** Sync
+Damit ist die initiale Einrichtung erledigt.  Für die regelmäßige Synchronisation habe ich dann ein Bashskript erstellt, welches die folgenden Schritte durchführt:
+
+1. Im Quellordner werden alle geänderten Dateien des Quellbranch eingecheckt
+2. Die Änderungen werden gepushed
+3. Es wird in den Zielordner gewechselt und dort der Zielbranch ausgecheckt
+4. Mit git merge werden die Änderungen integriert
+5. Falls es keine Konflikte gab wird der aktuelle Stand gepusht
+
+Der push ist dabei für die Synchronisation zwischen PC und Telefon nicht nötig, dadurch werden die Änderungen aber zusätzlich auf einen Remoteserver geschrieben.  Grundsätzlich läuft die Synchronisation in beide Richtungen (push oder pull) genau gleich ab, der Unterschied ist einzig, was Quell- und was Zielverzeichnis ist.  Das vollständige Bashskript ist im folgenden aufgeführt:
+
+#+begin_src bash
+#!/bin/bash -e
+
+ACTION="${1}"
+if [[ -z ${ACTION} ]]; then
+    ACTION="push"
+fi
+
+if [[ "${ACTION}" = "pull" ]]; then
+    SRC_DIR="${HOME}/Dokumente/android/org"
+    SRC_BRANCH="mobile"
+
+    TARGET_DIR="${HOME}/Dokumente/org"
+    TARGET_BRANCH="main"
+elif [[ "${ACTION}" = "push" ]]; then
+    SRC_DIR="${HOME}/Dokumente/org"
+    SRC_BRANCH="main"
+
+    TARGET_DIR="${HOME}/Dokumente/android/org"
+    TARGET_BRANCH="mobile"
+else
+    echo "Unknown action: ${ACTION}"
+    exit 1
+fi
+
+cd "${SRC_DIR}"
+git commit -am "Mobile ${ACTION} at $(date)"
+git push
+
+cd "${TARGET_DIR}"
+git checkout "${TARGET_BRANCH}"
+git merge --autostash --no-ff "${SRC_BRANCH}"
+git push
+#+end_src
+
+Um das ganze dann noch bequem direkt in Emacs zu verwenden, habe ich entsprechende Funktionen definiert, analog zu Org Mobile mit ~org-git-pull~ und ~org-git-push~ benannt sind und im Prinzip analog funktionieren.
+
+#+begin_src elisp
+(defun org-git-sync (action)
+  (let ((script "org-mobile"))
+    (call-process script nil "*Org-Mobile Sync*" t action)))
+
+(defun org-git-pull ()
+  (interactive)
+  (org-git-sync "pull"))
+
+(defun org-git-push ()
+  (interactive)
+  (org-git-sync "push"))
+#+end_src
+
+Im Fall eines Konflikts kann ich nun einfach auf dem PC die entsprechenden Dateien öffnen und wie gewohnt mit emacs und git das Problem beheben und danach die Änderungen manuell einchecken. 
+
+** Warum nicht nur git?
+Letztlich stellt sich eventuell noch die Frage, wozu in diesem Setup überhaupt noch Syncthing verwendet wird, schließlich könnte man auch git direkt auf dem Mobilgerät verwenden.  Dies wäre mittels [[https://github.com/maks/MGit][MGit]] grundsätzlich möglich, allerdings müsste ich dann auch im Zweifel die Konflikte direkt auf dem Mobilgerät auflösen, worauf ich lieber verzichten möchte.  Zusätzlich unterstützt meines Wissens nach MGit nicht direkt sparse checkouts.
+
+Insgesamt ermöglicht mir die Kombination aus Git und Syncthing, dass ich den größten Teil der Dateiverwaltung am PC erledigen kann und auf dem Telefon nur in Orgzly die Dateien editiere und meine Agenda abrufe.
+
