@@ -1,4 +1,5 @@
 #+title: Github Actions für org-publish
+#+subtitle: {{{date(%a %d.%m.%Y)}}}
 #+date: <2025-06-17 Di>
 
 Nachdem in [[file:BloggenMitOrgMode.org][Bloggen mit org-mode]] das grundsätzliche Setup zu org-publish beschrieben ist, sind im folgenden noch ein paar Details zur Kombination mit Github Actions dokumentiert, welche aktuell verwendet werden, um aus den org-Dateien die finalen HTML-Seiten zu bauen.

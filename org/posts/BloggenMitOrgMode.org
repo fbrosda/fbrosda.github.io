@@ -1,4 +1,5 @@
 #+title: Bloggen mit Org Mode
+#+subtitle: {{{date(%a %d.%m.%Y)}}}
 #+date: <2025-05-23 Fr>
 
 Dieser Eintrag beschreibt die wesentlichen Anforderungen und die sich daraus ergebende Umsetzung meines Blog Setups.

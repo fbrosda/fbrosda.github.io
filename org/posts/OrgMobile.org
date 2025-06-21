@@ -1,4 +1,5 @@
 #+title: Org Mobile Sync Setup
+#+subtitle: {{{date(%a %d.%m.%Y)}}}
 #+date: <2025-06-20 Fr>
 
 Notizen, Todo-Listen und auch diese Webseite werden von mir in [[https://orgmode.org/][org-mode]] geschrieben und verwaltet.  Insbesondere ein spontaner Einfall unterwegs wird dabei auf dem Mobiltelefon gespeichert, natürlich ebenfalls in einem org-Dokument, via [[https://www.orgzlyrevived.com/][Orgzly Revived]].  Dabei besteht dann natürlich die Notwendigkeit, die unterwegs gemachten Änderungen mit den Dateien auf dem PC zu synchronisieren, wobei ab und an auch Änderungen auf beiden Seiten passieren, bevor die Dateien wieder zusammengeführt werden. Dementsprechend ist neben dem reinen Sync auch eine Möglichkeit zum Diffen und zum Auflösen von Konflikten notwendig.  Hierzu verwende ich mittlerweile [[https://syncthing.net/][Syncthing]] und [[https://git-scm.com][Git]].

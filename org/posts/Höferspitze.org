@@ -1,4 +1,5 @@
 #+title: Skitour: Höferspitze
+#+subtitle: {{{date(%a %d.%m.%Y)}}}
 #+date: <2022-03-04 Fr>
 
 Gleich der erste Eintrag hat nicht direkt etwas mit Software zu tun.

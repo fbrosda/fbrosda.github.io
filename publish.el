@@ -76,6 +76,7 @@ current project."
   (setq make-backup-files nil
         org-html-doctype "html5"
         org-html-htmlize-output-type 'inline-css
+        org-html-metadata-timestamp-format "%a %d.%m.%Y"
         org-confirm-babel-evaluate nil
         org-export-global-macros `(("author" . ,user-full-name)
                                    ("address" . ,(string-replace "," "@@html:<br>@@" user-home-address))
