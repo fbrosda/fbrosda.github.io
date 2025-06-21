@@ -1,4 +1,5 @@
 #+title: Über mich
+#+date: <2025-05-17 Sa>
 
 Hi, ich bin Fabian und du hast meine persönliche Seite im WWW gefunden. Hier
 findest du noch ein paar Informationen zu mir und meiner Motivation, für dieses

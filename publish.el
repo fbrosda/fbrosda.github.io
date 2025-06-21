@@ -50,6 +50,7 @@ current project."
 
 (defun sitemap-function (title list)
   (concat "#+TITLE: " title "\n"
+          "#+DATE: " (format-time-string "<%Y-%m-%d %a>" (current-time)) "\n"
           "#+HTML_CONTENT_CLASS: sitemap\n"
           "Eine alphabetisch sortierte Liste aller verfasster Artikel:\n\n"
 	      (org-list-to-org
@@ -102,12 +103,8 @@ current project."
            :html-head-include-default-style nil
            :with-toc nil
            :section-numbers nil
-           :html-postamble t
-           :html-postamble-format
-           (("de" ,postamble-format))
-           :html-preamble t
-           :html-preamble-format
-           (("de" ,preamble-format)))
+           :html-postamble ,postamble-format
+           :html-preamble ,preamble-format)
           ("rss"
            :language "de"
            :base-directory ,posts-dir

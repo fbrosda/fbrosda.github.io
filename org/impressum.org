@@ -1,4 +1,5 @@
 #+title: Impressum
+#+date: <2025-05-17 Sa>
 
 * Angaben gemäß § 5 des Telemediengesetzes
 
