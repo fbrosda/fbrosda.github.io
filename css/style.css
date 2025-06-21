@@ -242,9 +242,4 @@ img {
 	#preamble .links {
 		display: none;
 	}
-
-	#postamble {
-		position: fixed;
-		bottom: 0;
-	}
 }
