@@ -1,0 +1,250 @@
+#+title: Notmuch Wanderlust
+#+subtitle: {{{date(%a %d.%m.%Y)}}}
+#+date: <2025-06-27 Fr>
+
+Auch wenn mittlerweile vieles über Instantmessager läuft, sind E-Mails doch noch immer allgegenwärtig.  Trotz oder vielleicht auch gerade weil vermutlich einer der ältesten Dienste im aktuellen Internet ist, habe ich das Gefühl, dass die Konfiguration und Organisation von E-Mail komplizierter ist, als es eigentlich sein müsste.  Ausgelöst durch ein kleines Problem mit notmuch, meinem vorherigen Mail User Agent (MUA), habe ich mein komplettes Setup nach einigen Jahren wieder auf den Prüfstand gestellt und umgekrempelt.  Nach einigen Stunden, welche ich mit dem Lesen von Dokumentation, alten Mailinglisten und auch dem Sourcecode zugebracht habe, bin ich bei einem Setup angelangt, welches hoffentlich wieder ein paar Jahre hält.  Zusätzlich fühlt sich insbesondere die Synchronisation über mehrere Geräte nun robuster an, als zuvor.
+
+* 10 Jahre Notmuch
+Wie der Titel es schon sagt verwende ich [[https://notmuchmail.org/][Notmuch]] schon seit längerer Zeit, um meine Mails zu verwalten.  Am Anfang noch in Kombination mit [[https://github.com/pazz/alot][Alot]], seit ich emacs verwende, mit dem dort integrierten User Interface.  Nachdem notmuch hier nicht im Mittelpunkt steht, möchte ich hier nicht zu detailliert auf das Tag-basierte verwalten von E-Mails eingehen.  Grundsätzlich funktioniert der Ansatz sehr gut und die Umsetzung in notmuch ist blitzschnell.  Wie man weiter unten sehen kann, verwende ich notmuch auch nach wie vor zum Indexieren und Durchsuchen meiner Mails, allerdings ohne Tags zu vergeben, sondern jetzt basierenden auf Sender, Empfänger und dem Inhalt der Nachrichten.
+
+Kompliziert war für mich seit je her, dass die Tags zunächst einmal nicht auf Ordner abgebildet werden, wodurch eine gleichzeitige Verwendung weiterer MUAs schwierig ist, da eben sämtliche Struktur hauptsächlich in den Tags vorhanden ist.  In Kombination mit [[https://github.com/afewmail/afew][afew]], welches ich zum initialen Taggen und zum Verschieben von Mails verwendet habe, lässt sich das ganze abmildern, das Setup hat aber immer mal wieder kleinere Probleme gemacht und wirkte auf Dauer etwas fragil.  Zusätzlich ist das letzte offizielle Release von afew mittlerweile von 2020 und nachdem zuletzt notmuch die alte API entfernt hat, lässt sich die afew Version in den aktuellen Paketquellen von Arch Linux leider nicht mehr mit der aktuellen Version von Notmuch betreiben (Stand Juni 2025).  Einen guten Ersatz nur für afew konnte ich nicht finden, sodass dies der Auslöser war, nach alternativen MUAs in emacs zu suchen.  Vermutlich könnte man auch einfach Thunderbird verwenden, aber das wäre dann auch irgendwie langweilig und es gäbe nichts zum schreiben 😉.
+
+* Alternative Emacs MUAs
+Neben Wanderlust finden sich im EmacsWiki in der [[https://www.emacswiki.org/emacs/CategoryMail][Kategorie Mail]] eine ganze Liste von verschiedenen MUAs. Hier ein kurzer Überblick meiner persönlichen Gründe, warum der eine oder andere nicht in Frage kommt. Außerdem hat Wanderlust letztlich den coolsten Namen...
+
+- Rmail :: Kann nur E-Mails lesen, aber nicht in verschiedenen Ordnern verwalten
+- Gnus :: Nicht getestet, aber dem Vernehmen nach noch komplizierter zu konfigurieren, wäre aber grundsätzlich eine Alternative
+- MH-E :: Kann keine Mails in Maildirs verwalten
+- Mew :: Erscheint mir auf den ersten Blick weniger verbreitet und weniger dokumentiert als Wanderlust
+- VM :: Seit 2024 wieder aktiv und sehr interessant, aber aktuell leider keine Maildir Unterstützung
+- mu4e :: Ebenfalls eine mögliche Alternative, leider ist ~mu~ nur im AUR verfügbar und ich versuche möglichst viele Programme aus den offiziellen Quellen zu verwenden
+
+* Wanderlust
+Nachdem damit geklärt wäre, warum ich [[https://github.com/wanderlust/wanderlust][Wanderlust]] verwende, möchte ich hier meine Konfiguration dokumentieren, insbesondere, da ich online zwar viele sehr hilfreiche Konfigurationen andere Nutzer gefunden habe und von dort auch einiges übernommen habe, letztlich aber alles diese Quellen schon etwas in die Jahre gekommen wirken.  Trotzdem ist Wanderlust keineswegs veraltet und ein kleiner [[https://github.com/wanderlust/wanderlust/issues/242][Fehler]] wurde umgehend gefixed.
+
+** Grundsätzliche Konfiguration
+Soll ein IMAP Account direkt eingebunden werden, macht es als erstes Sinn, die Variablen ~elmo-imap4-default-*~ entsprechend zu setzen.  Alternativ können diese Werte auch direkt in der Folder Definition (s.a. [[Folders]]) definiert werden.  Um das Passwort über ~auth-source~ abzurufen, muss man zusätzlich ~elmo-passwd-storage-type 'auth-source~ setzen und falls man ~pass~ als Passwortmanager verwendet auch noch ~auth-source-pass-enable~ ausführen.
+
+Als nächstes werden für andere Typen von Mail (z.B Maildir) die entsprechenden Wurzelverzeichnisse via ~elmo-*-folder-path~ definiert, damit diese später in der Folders Datei relativ zu eben jenen definiert werden können.  Dann erwartet Wanderlust von ein paar Verzeichnissen (~wl-*-folder~), dass diese im Dateisystem existieren.  Hier kann man entsprechend eigene Pfade angeben.  Sollten die Ordner beim Start von Wanderlust noch nicht existieren, wird nachgefragt, ob diese dann erstellt werden sollen.
+
+Will man Mails via ~msmtp~ versenden, so muss noch ~wl-draft-send-mail-function~ angepasst werden.
+
+Wenn man nun noch eine entsprechende Folders Datei anlegt, kann man Wanderlust bereits benutzen, allerdings gibt es noch eine Reihe weiterer Einstellungen, welche in meinen Augen angepasst werden sollten.
+
+Am wichtigsten, wenn man mehrere Accounts hat, ist dabei ~wl-template-alist~ und ~wl-draft-config-alist~.  Mittels dieser Variablen kann man Templates für verschiedene Accounts definieren und die entsprechenden Variablen, sowie bspw. den From Header passend setzen.  Die in ~wl-template-alist~ definierten Accounts kann man dabei via ~wl-template-select~ beim Schreiben einer Mail auswählen.  Zusätzlich kann Wanderlust auch automatisch das passende Template auswählen, je nach dem in welchem Ordner man sich gerade befindet ~wl-draft-config-alist~.  Dies passiert normal erst beim Senden der Mail, was etwas verwirrend sein kann.  Deshalb wird der ~wl-mail-setup-hook~ gesetzt, um das Template vor dem Schreiben bereits auszuwählen.
+
+Die restliche Konfiguration sollte mittels der Dokumentation der einzelnen Variablen recht gut verständlich sein.
+
+** Folders
+In der Datei "\tilde/.folders" (Pfad anpassbar via ~wl-folders-file~) werden dann noch die verschiedenen Ordner definiert, in denen E-Mails zu finden sind. Dabei werden unterschiedlichste Formate unterstützt, welche durch unterschiedliche Präfixe (z.B. "%" für IMAP, "." für Maildir) gekennzeichnet sind.  Ein ausführliches Beispiel findet sich in der [[https://wanderlust.github.io/wl-docs/wl.html#Folder-Definition-1][offiziellen Dokumentation]].
+
+** E-Mail schreiben
+Um Mails mit Wanderlust via ~compose-mail~ zu verfassen, muss noch ein entsprechender Mail User Agent via ~define-mail-user-agent~ definiert und in der Variable ~mail-user-agent~ hinterlegt werden.
+
+** Semi
+Diese Paket ist für das Anzeigen und Verfassen von MIME Mails verantwortlich.  Ein Problem dabei war, dass das direkte Öffnen der Anhänge nicht funktionierte.  Stattdessen bekam ich die Fehlermeldung, dass die Datei nicht existiert.  Semi scheint diese per default direkt wieder zu löschen ~mime-play-delete-file-immediately~ und anscheinend passiert das sogar, bevor das entsprechende Programm die Datei anzeigen kann.  Zumindest bei mir unter Gnome.  Die genannte Variable auf ~nil~ zu setzen hat das Problem behoben.  Da die Dateien sowieso unter ~/tmp~ abgelegt werden, werden diese dann beim Herunterfahren des PC entfernt.
+
+** Apel
+Apel enthält verschiedene grundsätzliche Funktionen, welche in Wanderlust verwendet werden.  Normal sollte man hier nicht viel konfigurieren müssen.  Was mich allerdings gestört hat, ist, dass beim Schreiben einer Mail das Encoding automatisch festgelegt wird und dabei für deutsche Umlaute standardmäßig iso-8859-1 verwendet wird, was meiner Meinung nach nicht mehr zeitgemäß ist.  Stattdessen sollen alle Mails mit utf-8 encoded werden.  Hierzu muss ~charsets-mime-charset-alist~ gelöscht werden.
+
+Zusätzlich soll auch beim Anzeigen von Nachrichten, falls nicht explizit ein Charset gesetzt ist utf-8 verwendet werden ~default-mime-charset~ und auch in der Summary Ansicht ~wl-mime-charset~.
+
+** HTML Mail
+Das Lesen von HTML E-Mails sollte out of the box funktionieren, da Emacs schon seit längerem das Paket ~shr~ enthält, welches von Wanderlust verwendet werden kann.  Die Info aus der [[https://wanderlust.github.io/wl-docs/wl.html#mime_002dw3m_002eel][Dokumentation]] ~mime-w3m~ zu installieren ist für mein Verständnis veraltet, s.a. [[https://www.emacswiki.org/emacs/WlFaq#h5o-25][HTML-Mails lesen]].
+
+** Wl-Biff
+Um benachrichtigt zu werden, wenn neue Mails eingetroffen sind, kann das Modul ~wl-biff~ verwendet werden.  Grundsätzlich muss nur definiert werden, welche Ordner überwacht werden sollen ~wl-biff-check-folder-list~.  Zusätzlich habe ich noch eine Funktion ~wl-biff-notify-cmd~ definiert, welche eine Desktop Benachrichtigung in Gnome via ~notify-send~ anzeigt.  Diese wird durch den ~wl-biff-notify-hook~ aufgerufen.
+
+** Expliziter Mail Sync
+Da nach wie vor alle meine Mails mittels Isync periodisch im Hintergrund synchronisiert werden, welches nicht direkt IMAP IDLE unterstützt, kann ich zusätzlich noch explizit die Synchronisation der Mail Ordner anstoßen.  Dies wird via ~mbsync-sync~ erledigt.
+
+** E-Mail Validierung beim Senden
+Um zu verhindern, dass ich Mails aus versehen ohne Betreff, oder ohne Anhang versende, obwohl dieser im Text erwähnt wird, gibt es zwei Funktionen ~wl-draft-check-*~, welche, inspiriert durch [[https://dis-dot-dat.blogspot.com/2010/04/my-wanderlust-setup.html][diese Konfiguration]], von dem Senden aufgerufen werden und die entsprechenden Punkte überprüfen.
+
+* Vollständige Konfiguration
+Nach der ganzen Erklärung folgt nun die vollständige Konfiguration für die verwendeten Pakte.
+
+** Wanderlust
+Zunächst die Konfiguration von Wanderlust selbst.  Ziel ist dabei das Ganze möglichst zeitgemäß mit ~use-package~ umzusetzen.  Die verschiedenen Beispiele im [[https://www.emacswiki.org/emacs/WanderLust#h5o-11][EmacsWiki]] sind in dem Bezug leider veraltet.
+
+#+begin_src elisp
+(defun mbsync-sync ()
+  "Sync imap folder explicitly."
+  (interactive)
+  (let ((proc (start-process "Fetch Mail" "*mbsync log*" "mbsync" "-V" "-a")))
+    (set-process-sentinel proc #'mbsync-sentinel)))
+
+(defun mbsync-sentinel (process event)
+  "Sentinel for mbsync-sync. If sync succeeds, update all folders.
+PROCESS is the process object. EVENT is a string describing the change."
+  (if (and (eq (process-status process) 'exit)
+           (= (process-exit-status process) 0))
+      (wl-folder-check-all)
+    (message "mbsync-sync failed: %s" process event)))
+
+(defun wl-biff-notify-cmd ()
+  "Send desktop notification when new mail is available."
+  (start-process "Notify Mail" "*notify-mail*" "notify-send" "-a" "Wanderlust" "Neue Nachrichten"))
+
+(defun wl-draft-check-subject ()
+  "Check whether the message has a subject before sending it."
+  (or (> (length (std11-field-body "Subject")) 0)
+      (y-or-n-p "No subject! Send current draft?")))
+
+(defun wl-draft-check-attachment ()
+  "If an attachment is mention but none included, warn the the user."
+  (save-excursion
+    (goto-char 0)
+    (or (not (save-excursion
+               (goto-char 0)
+               (or (re-search-forward "attach" nil t)
+                   (re-search-forward "anhang" nil t)
+                   (re-search-forward "anbei" nil t))))
+        (re-search-forward "^Content-Disposition: attachment" nil t)
+        (y-or-n-p "Possibly missing an attachment. Send current draft?"))))
+
+(defun wl-draft-check ()
+  "Check different conditions, before sending the mail.
+The following checks are made:
+  - Check if the subject is not empty
+  - If an attachment is mentioned in the text, check if it exists"
+  (unless (and (wl-draft-check-subject)
+               (wl-draft-check-attachment))
+    (error "Abort sending of mail.")))
+
+(use-package wanderlust
+  :ensure t
+  :bind (("<f5> m" . wl)
+         ("C-x M-m" . mbsync-sync))
+  :commands (wl wl-other-frame wl-draft wl-user-agent-compose)
+  :hook ((wl-mail-setup . wl-draft-config-exec)
+         (wl-biff-notify . wl-biff-notify-cmd)
+         (wl-mail-send-pre . wl-draft-check)
+         ((wl-folder-mode mime-view-mode) . variable-pitch-mode))
+  :init
+  (auth-source-pass-enable)
+  (define-mail-user-agent 'wl-user-agent
+    'wl-user-agent-compose 'wl-draft-send 'wl-draft-kill 'mail-send-hook)
+  (setopt mail-user-agent 'wl-user-agent
+          elmo-archive-folder-path "~/Dokumente/Mail/archive")
+  :custom
+  (elmo-lang "de")
+  (elmo-imap4-default-user "fb@account1.de")
+  (elmo-imap4-default-server "imap.account1.net")
+  (elmo-imap4-default-port 993)
+  (elmo-imap4-default-stream-type 'ssl)
+  (elmo-localdir-folder-path "~/Dokumente/Mail/wl")
+  (elmo-maildir-folder-path "~/Dokumente/Mail")
+  ;; (elmo-archive-folder-path "~/Dokumente/Mail/archive")  ;; defined via defvar, so this does not work
+  (elmo-search-default-engine 'notmuch)
+  (elmo-passwd-storage-type 'auth-source)
+  (elmo-message-fetch-threshold 10000000)
+
+  (wl-default-spec ".")
+  (wl-default-folder "'flag")
+  (wl-draft-folder "+Entwürfe")
+  (wl-queue-folder "+Postausgang")
+  (wl-spam-folder ".account1/Spamverdacht")
+  (wl-trash-folder "+Papierkorb")
+  (wl-quicksearch-folder "[]")
+  (wl-fcc-force-as-read t)
+  (wl-biff-check-folder-list '(".account/inbox" ".account2/inbox" ".account3/inbox"))
+  (wl-mime-charset 'utf-8)
+  (wl-draft-always-delete-myself t)
+  (wl-auto-save-drafts-interval 300)
+  (wl-draft-send-mail-function 'wl-draft-send-mail-with-sendmail)
+  (wl-prefetch-threshold elmo-message-fetch-threshold)
+  (wl-message-buffer-prefetch-threshold elmo-message-fetch-threshold)
+  (wl-folder-window-width 40)
+  (wl-auto-select-next 'skip-no-unread)
+  (wl-summary-width nil)
+  (wl-summary-weekday-name-lang "de")
+  (wl-temporary-file-directory "~/Download/")
+  (wl-summary-number-column-alist '(("^access:" . 8)
+                                    ("^-" . 8)
+                                    ("\\*.*" . 8)))
+  (wl-summary-line-format "%n%T%P %W %D.%M.%Y %h:%m %t%[%17(%c %f%) %] %s")
+  (wl-forward-subject-prefix "Fwd: ")
+  (wl-user-mail-address-list '("fb@account1.de"
+                               "fb@account2.de"
+                               "fb@account3.de"))
+  (wl-message-ignored-field-list '("."))
+  (wl-message-visible-field-list '("^\\(To\\|Cc\\):"
+                                   "^Subject:"
+                                   "^\\(From\\|Reply-To\\):"
+                                   "^\\(Posted\\|Date\\):"
+                                   "^Organization:"))
+  (wl-template-alist '(("account1"
+                        (wl-draft-folder . ".account1/Entwürfe")
+                        (wl-fcc . ".account1/Gesendet")
+                        ("From" . wl-from)
+                        ("Fcc" . wl-fcc))
+                       ("account2"
+                        (wl-from . "Fabian Brosda <fb@account2.de>")
+                        (wl-draft-folder . ".account2/draft")
+                        (wl-fcc . ".account2/sent")
+                        ("From" . wl-from)
+                        ("Fcc" . wl-fcc))
+                       ("account3"
+                        (wl-from . "Fabian Brosda <fb@account3>")
+                        (wl-draft-folder . ".account3/draft")
+                        (wl-fcc . ".account3/sent")
+                        ("From" . wl-from)
+                        ("Fcc" . wl-fcc))))
+  (wl-draft-config-alist '(((string-match "^\\.account1/" wl-draft-parent-folder) (template . "account1"))
+                           ((string-match "^\\.account2/" wl-draft-parent-folder) (template . "account2"))
+                           ((string-match "^\\.account3/" wl-draft-parent-folder) (template . "account3")))))
+
+(use-package apel
+  :after wl
+  :custom
+  (default-mime-charset 'utf-8)
+  :init
+  (setopt charsets-mime-charset-alist nil))
+
+(use-package semi
+  :after wl
+  :custom
+  (mime-play-delete-file-immediately nil) ;; Make sure mime-play works, breaks if file is deleted immediately
+  (mime-save-directory "~/Download/"))
+#+end_src
+
+** Sendmail via msmtp
+Die Konfiguration von sendmail ist relativ einfach.  Mittels ~mail-envelope-from~ wird der Account basierend auf dem ~From~ Header ausgewählt.  Somit werden 'automatisch' mehrere Accounts unterstützt.
+
+#+begin_src elisp
+(use-package sendmail
+  :custom
+  (sendmail-program "msmtp")
+  (send-mail-function 'sendmail-send-it)
+  (mail-specify-envelope-from t)
+  (mail-envelope-from 'header))
+#+end_src
+
+** Org Mode Integration
+Zusätzlich kann ~ol-wl.el~ aus [[https://github.com/emacsmirror/org-contrib/blob/master/lisp/ol-wl.el][org-contrib]] verwendet werden, um Links zu E-Mails in Wanderlust in org Dokumente einzufügen.
+
+** Khard und Khardel
+Darüber hinaus kann dann [[https://github.com/lucc/khard][khard]] und [[https://github.com/DamienCassou/khardel][khardel]] verwendet werden, um die Kontakte zu verwalten.  Dies hat den Vorteil, dass diese als vCards gespeichert werden, welche einfach (z.b. via Radicale) mit dem Telefon synchronisiert werden können.
+
+#+begin_src elisp
+(use-package khardel
+  :ensure t
+  :bind (:map khardel-mode-map
+              ("e" . khardel-edit-contact)
+              ("n" . khardel-new-contact)
+         :map khardel-edit-mode-map
+              ("C-c C-k" . kill-current-buffer)
+         :map mail-mode-map
+              ("C-c i" . khardel-insert-email))
+  :init
+  (keymap-global-set "<f5> k" (define-keymap :prefix 'khardel-mode-map)))
+#+end_src
+
+** Weitere Programme
+Zusätzlich müssen noch isync, msmtp und notmuch konfiguriert werden. Hierzu sei auf die exzellente Dokumentation im ArchLinux Wiki verwiesen:
+
+- isync :: https://wiki.archlinux.org/title/Isync
+- msmtp :: https://wiki.archlinux.org/title/Msmtp
+- notmuch :: https://wiki.archlinux.org/title/Notmuch
+
