@@ -15,24 +15,20 @@ Höferspitze im Kleinwalsertal zu unternehmen.
 #+caption: Blick auf den Widderstein während des Aufstiegs
 #+name: ascent
 #+ATTR_HTML: :src /media/images/Höferspitze_Widderstein.webp
-[[../../media/images/Höferspitze_Widderstein.webp]]
+[[../../media/images/Höferspitze_Widderstein.jpg]]
 
 Nach einem kurzen Stück auf schmalem Grat, angekommen am Gipfelkreuz:
 
 #+caption: Gipfelkreuz
 #+ATTR_HTML: :src /media/images/Höferspitze_Gipfel.webp
-[[../../media/images/Höferspitze_Gipfel.webp]]
+[[../../media/images/Höferspitze_Gipfel.jpg]]
 
 Zum Schluss noch ein Bild von der Aussicht nach Süden:
 
 #+caption: Ausblick am Gipfel
 #+ATTR_HTML: :src /media/images/Höferspitze_Panorama.webp
-[[../../media/images/Höferspitze_Panorama.webp]]
+[[../../media/images/Höferspitze_Panorama.jpg]]
 
 
 * Details zur Route
-Eine ausführliche Beschreibung der Tour kann man hier finden:
-
-#+begin_export html
-<script type="text/javascript" src="https://www.outdooractive.com/en/embed/54325348/js?mw=false"></script>
-#+end_export
+Eine ausführliche Beschreibung der Tour findet man bei [[https://www.outdooractive.com/de/route/skitour/kleinwalsertal/skitour-von-baad-auf-die-hoeferspitze/54325348/][outdooractive]].

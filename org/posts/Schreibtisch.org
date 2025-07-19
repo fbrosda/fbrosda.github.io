@@ -1,0 +1,35 @@
+#+title: Arbeitsplatz Setup
+#+subtitle: {{{date(%a %d.%m.%Y)}}}
+#+date: <2025-07-19 Sa>
+
+Bereits seit meinem Japanurlaub vor zwei Jahren hatte ich die Idee im Hinterkopf, ob man nicht auch am Schreibtisch im Homeoffice auf dem Boden sitzen könnte.  Allerdings war ich zunächst einmal skeptisch, ob den ganzen Tag auf dem Boden sitzen auf Dauer wirklich bequem sein kann.  Letztlich macht es doch einen Unterschied, ob man gelegentlich auf dem Boden sitzt, oder den ganzen Tag am Schreibtisch so verbringt.  Nach einer kurzen Recherche habe ich dann durchaus überrascht festgestellt, dass es mir [[https://www.reddit.com/r/floordesks/][/r/floordesks]] unter anderem auf Reddit eine gar nicht so kleine Community gibt, welche die Vorteile des auf dem Boden sitzens auch zum Arbeiten unterstützt.  Immer noch etwas skeptisch und keines Wegs bereit zu glauben, dass das auf Dauer besser, oder gar gesünder ist, hat mich die Idee trotzdem nicht mehr losgelassen, sodass ich das zumindest einmal ausprobieren wollte.  Im besten Fall, ohne allzu großen Aufwand und allzu große Kosten.  Das aktuelle Ergebnis sieht dabei wie folgt aus:
+
+#+caption: Schreibtisch
+#+ATTR_HTML: :src /media/images/Schreibtisch_Gesamt.webp
+[[../../media/images/Schreibtisch_Gesamt.jpg]]
+
+* Umsetzung
+Zum Glück für das Experiment, lässt sich bei meinem IKEA Schreibtisch die Tischplatte problemlos abnehmen und darüber hinaus hatten wir noch zwei kleine unbenutzte Regale herumstehen.   Damit liegt die Tischplatte nun zunächst einmal einfach auf den beiden Regalen, welche zusätzlich noch ein wenig Stauraum auf den Seiten bietet, sodass mir das Setup durchaus auch als dauerhafte Lösung gefällt.  Die Höhe der Tischplatte beläuft sich aktuell auf 44cm.  Zumindest für mich zu hoch, um komfortabel im Schneidersitz direkt auf dem Boden zu sitzen.  Stattdessen verwende ich ein [[https://de.wikipedia.org/wiki/Zafu][Zafu]] und [[https://de.wikipedia.org/wiki/Zabuton][Zabuton]], womit es sich in meiner Erfahrung auch länger komfortabel Sitzen lässt, als direkt auf dem Boden.
+
+#+caption: Schreibtisch frontal
+#+ATTR_HTML: :src /media/images/Schreibtisch_Frontal.webp
+[[../../media/images/Schreibtisch_Frontal.jpg]]
+
+* Erfahrung
+Nach ein paar Wochen der regelmäßigen Nutzung lässt sich zunächst festhalten, dass die Umstellung etwas Zeit braucht.  Dabei ist für mich die Hauptumstellung die fehlende Lehne, welche allerdings nicht automatisch in einer aufrechten Sitzhaltung mündet.  Zwar kann man sich nicht mehr so weit nach hinten lehnen, gleichzeitig habe ich die Erfahrung gemacht, dass man trotzdem bewusst auf eine aufrechte Haltung achten muss, um nicht nach vorne weg zu kippen.   Insbesondere an den ersten Tagen (oder eigentlich immer) macht es Sinn nicht zu lange am Schreibtisch zu sitzen und sich so nach und nach an die andere Belastung zu gewöhnen.
+
+Trotzdem bleibt für mich auch nach einiger Zeit das dauerhafte Sitzen in einer Position nie so komfortabel, wie mit einem guten Schreibtischstuhl sein könnte.  Aber das ist laut den Befürwortern des auf dem Boden Sitzens sogar mehr Vorteil als Nachteil, da dies als regelmäßige Erinnerung dient, die Sitzhaltung zu variieren und genau hier hat man auf dem Boden deutlich mehr Möglichkeiten, als bei einem Schreibtischstuhl.  Dass diese Art des Sitzens nun auf Dauer besser ist, als ein gut angepasster Schreibtischstuhl glaube ich nicht.  Allerdings würde ich aus der aktuellen Erfahrung sagen, dass es auch nicht schlechter ist und letztlich ist regelmäßige Abwechslung und viel Bewegung zum Ausgleich das beste, wenn man den Großteil der Arbeit im Sitzen verbringt.
+
+#+caption: Schreibtisch seitlich
+#+ATTR_HTML: :src /media/images/Schreibtisch_Seitlich.webp
+[[../../media/images/Schreibtisch_Seitlich.jpg]]
+
+* Weitere Technik
+Auch wenn es bis jetzt nur um den Schreibtisch ging, möchte ich die Tastatur und meinen Trackball nicht unerwähnt lassen, welche beide einen wesentlichen Teil zum entspannten Arbeiten beitragen.  Dabei ist speziell der Trackball in meinen Augen die deutlich bessere Alternative zu einer normalen Maus, da man diesen deutlich näher neben der Tastatur positionieren kann, ohne dass sich beides in die Quere kommt.  Ebenso ist die geteilte Tastatur deutlich angenehmer für die Handhaltung, wenn man konsequent das Zehnfingersystem zum Schreiben anwendet.  Was sich dagegen für mich nicht bewährt hat, sind alternative Tastaturbelegungen, wie bspw. Dvorak.  Details dazu füllen allerdings einen eigenen Beitrag. 
+
+#+caption: Schreibtisch von oben
+#+ATTR_HTML: :src /media/images/Schreibtisch_Oben.webp
+[[../../media/images/Schreibtisch_Oben.jpg]]
+
+* Fazit
+Zumindest für den Moment hat mich der Schreibtisch soweit überzeugt, dass ich diesen so länger weiter benutzen werde.  Ein spannendes Upgrade wäre noch ein höhenverstellbarer Schreibtisch, welcher vom Fußboden bis zum Stehschreibtisch alles abdeckt.  Leider sind die wenigen Modelle, die es dazu aktuell gibt in Deutschland gar nicht oder nur mit sehr hohen Versandkosten zu erwerben.  Ansonsten ist die etwas improvisierte Konstruktion so stabil, dass es aktuell keinen Grund für weitere Anpassungen gibt.
