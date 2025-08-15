@@ -13,6 +13,9 @@
 	--marg-hori: calc(var(--font-size) * 0.5);
 	--font-family: sans-serif;
 }
+@view-transition {
+  navigation: auto;
+}
 html {
 	font-size: var(--font-size);
 	font-family: var(--font-family);
