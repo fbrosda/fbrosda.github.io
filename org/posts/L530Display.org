@@ -1,0 +1,49 @@
+#+title: Displaytausch bei einem ThinkPad L530
+#+subtitle: {{{date(%a %d.%m.%Y)}}}
+#+date: <2025-08-15 Sa>
+
+Ich habe hier noch ein altes [[https://thinkwiki.de/L530][L530]], das leider schon vor einiger Zeit einmal abgestürzt ist und seit dem einen immer größer werdenden schwarzen Fleck im Display hat.  Deshalb war es an der Zeit das alte Display durch ein neues zu ersetzen.  Dem [[https://download.lenovo.com/ibmdl/pub/pc/pccbbs/mobiles_pdf/0b48570.pdf][Handbuch]] nach sollte das auch gar nicht so schwer sein. Nach ein wenig mehr Recherche hab ich mich dafür entschieden wieder ein Display mit einer Auflösung von 1366x768px zu verbauen,  da ansonsten eventuell das Kabel mit getauscht werden müsste, wozu man den Laptop deutlich weiter hätte zerlegen müssen.
+
+* Zerlegen
+
+Der Ausbau war dann auch entsprechend einfach.  Zunächst zwei Schrauben auf der Vorderseite lösen, dann den Plastikrahmen abklipsen.  Leider sind dabei einige der Plastikhaken etwas in Mitleidenschaft gezogen worden.  Der Rahmen hält zwar wieder, aber hier habe ich leider noch keine Methode gefunden, derartige Klipse komplett schadlos zu öffnen.
+
+#+caption: Displayrahmen
+#+ATTR_HTML: :src /media/images/L530_Display_Rahmen.webp
+[[../../media/images/L530_Display_Rahmen.jpg]]
+
+Der Rest des Auseinanderbaus war dann sehr einfach. Sechs schrauben innen am Rahmen lösen und dann noch vier Schrauben auf der Seite, um das Display von dem Rahmen zu lösen.  
+
+#+caption: Rückseite des Displays
+#+ATTR_HTML: :src /media/images/L530_Display_Rückseite.webp
+[[../../media/images/L530_Display_Rückseite.jpg]]
+
+Danach musste noch der recht filigran wirkende Stecker abgezogen werden.  Dazu zuerst den Kleber lösen und dann noch unten abziehen.
+
+#+caption: Displaystecker
+#+ATTR_HTML: :src /media/images/L530_Display_Stecker.webp
+[[../../media/images/L530_Display_Stecker.jpg]]
+
+* Zusammenbau
+Das neue Display konnte dann prompt angesteckt werden und ein kurzer Test im geöffneten Zustand bestätigte, dass soweit alles gut gegangen war.  Dann stellte sich allerdings heraus, dass die eigentliche Herausforderung die vier kleinen Schrauben an der Seite darstellten, um das Display, wieder an den Metallrahmen zu schrauben, welcher dann im Deckel befestigt wurde.
+
+#+caption: Metallrahmen, an dem das Display befestigt wird.
+#+ATTR_HTML: :src /media/images/L530_Display_Metallrahmen.webp
+[[../../media/images/L530_Display_Metallrahmen.jpg]]
+
+Die Schrauben sind leider so klein und der Metallrahmen im Deckel eingelassen, sodass das Befestigen zu einem Geduldsspiel aus Display im Rahmen ausrichten und Schraube ansetzen, ohne, dass sie in den Deckel fällt, wurde.  Nach zu vielen Versuchen, waren letztlich alle vier Schrauben wieder an Ort und Stelle.
+
+#+caption: Schraube unten rechts
+#+ATTR_HTML: :src /media/images/L530_Display_Seitenansicht.webp
+[[../../media/images/L530_Display_Seitenansicht.jpg]]
+
+Danach mussten noch die Kabel, welche um das Display herumgeführt wurden, wieder ordentlich verlegt werden, was auch etwas Zeit in Anspruch nahm, da diese relativ knapp bemessen waren.
+
+#+caption: Schraube oben rechts
+#+ATTR_HTML: :src /media/images/L530_Display_Oben.webp
+[[../../media/images/L530_Display_Oben.jpg]]
+
+Den Rahmen danach wieder im Deckel zu verschrauben war denkbar einfach.  Beim Anklipsen des Plastikrahmens wurde es noch einmal kurz spannend, da eines der Kabel sich noch einmal gelöst hatte und im Weg war, danach warteten aber keine Herausforderungen und auch die letzten beiden Schrauben wurden sicher verbaut.
+
+* Fazit
+Auch wenn der Zusammenbau etwas Zeit brauchte, ist es immer wieder schön, wenn man noch ein altes ThinkPad hat, das man trotz allem sehr einfach und mit einem sehr guten Handbuch dazu selbst warten kann.  Das Display funktioniert wieder einwandfrei und für 70€ inkl. Versand hat sich der Displaytausch definitiv gelohnt.
