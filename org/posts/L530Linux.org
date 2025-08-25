@@ -1,0 +1,174 @@
+#+title: ThinkPad L530 - Arch Linux Installation
+#+subtitle: {{{date(%a %d.%m.%Y)}}}
+#+date: <2025-08-25 Mo>
+
+Nachdem ich an dem alten L530 das [[file:L530Display.org][Display]] repariert habe, war die Frage, was ich mit dem zusätzlichen Rechner machen sollte.  Nachdem ich meinen anderen Laptop ein L460 2016 ebenfalls mit Arch Linux aufgesetzt und seit dem nicht mehr neu installiert habe,  nutze ich das L530 jetzt um mit btrfs, Secure Boot und was mir sonst noch so einfällt zu spielen.  Der erste Schritt dazu ist eine Neuinstallation.
+
+* Anforderungen
+Die Features die ich dabei umsetzen will, müssen dabei nicht unbedingt der beste oder einfachste Weg sein, sondern sind einfach Dinge, mit denen ich etwas spielen möchte:
+
+- btrfs soll als Dateisystem eingesetzt werden
+- Das System ist vollständig verschlüsselt
+- Zum Entschlüsseln wird ein Keyfile auf einer SD Karte verwendet
+- systemd-ukify und der systemd Hook in mkinitcpio werden verwendet
+- +Die Bootpartition ist ebenfalls auf der SD Karte+ (leider musste ich feststellen, dass das L530 zwar von einem USB-Stick, aber nicht von einer SD-Karte im eingebauten Kartenlesegerät booten kann)
+- Secure Boot aktivieren (wird später in einem eigenen Post behandelt)
+
+** Verschlüsselung mit LUKS
+Das grundsätzliche Setup entspricht [[https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system#LVM_on_LUKS][LVM on LUKS]] nur dass statt LVM dann btrfs Subvolums (s. unten) zum Einsatz kommen.  Das grundsätzliche Vorgehen ist [[https://wiki.archlinux.org/title/Dm-crypt/Device_encryption#Encrypting_devices_with_LUKS_mode][hier]] beschrieben.  Zusätzlich muss dann dass initramfs entsprechend [[https://wiki.archlinux.org/title/Dm-crypt/System_configuration][konfiguriert]] werden.
+
+** SD Karte
+Die SD-Karte enthält am Ende eine kleine Partition, welche das [[https://wiki.archlinux.org/title/Dm-crypt/Device_encryption#Keyfiles][Keyfile]] enthält, sowie ebenfalls eine verschlüsselte Partition, um ein Backup das LUKS-Header des Hauptsystems, der ssh Schlüssel, und ähnliches zu speichern.
+
+** Btrfs Subvolume Layout
+Beim Layout der Subvolumes gibt es zwei grundsätzliche Varianten. [[https://archive.kernel.org/oldwiki/btrfs.wiki.kernel.org/index.php/SysadminGuide.html#Layout][Flat oder Nested]].  Nach kurzer Recherche habe ich mich für ein [[https://wiki.archlinux.org/title/Snapper#Suggested_filesystem_layout][Flat Layout]] entschieden, das folgende Subvolumes enthält:
+
+#+begin_src 
+@        /
+@home    /home
+@root    /root
+@srv     /srv
+@cache   /var/cache
+@log     /var/log
+@swap    /swap Enthält ein Swapfile
+#+end_src
+
+Damit sollten dann Snapshots und Rollbacks des Hauptsystems möglich sein.  Aktuell ist mir allerdings noch nicht ganz klar, wie die nicht verschlüsselte ~/boot~ Partition dabei eingebunden wird.
+
+* Installation
+Um die Installation später einfach nachvollziehen zu können, folgt nun die vollständige Dokumentation der einzelnen Schritte:
+
+** Herunterladen, vorbereiten und booten des Installationsmediums
+[[https://archlinux.org/download/][Link]]
+
+Das Kopieren auf einen usb-Stick funktioniert auch mit [[https://wiki.archlinux.org/title/USB_flash_installation_medium#Using_basic_command_line_utilities][~cp~]], das wusste ich bis jetzt nicht
+** Wifi Einrichten
+#+begin_src sh
+iwctl
+device list
+station wlan0 scan
+station wlan0 get-networks
+station wlan0 connect <MyNetwork>
+#+end_src
+
+** Formatieren der Festplatte
+#+begin_src sh
+fdisk
+# GPT Partitionstabelle erstellen
+# Partition 1 mit 1G für Boot erstellen, im Folgenden /dev/sda1
+# Typ der Partition 1 zu EFI ändern
+# Partition 2 für den Rest erstellen, im Folgenden /dev/sda2
+
+mkfs.fat -F 32 -n BOOT /dev/sda1
+
+cryptsetup luksFormat /dev/sda2
+cryptsetup config --label crypt /dev/sda2
+cryptsetup open /dev/disk/by-label/crypt arch
+mkfs.btrfs -L arch /dev/mapper/arch
+mount /dev/mapper/arch /mnt
+
+for i in @ @home @root @srv @cache @log @swap;
+do
+    btrfs subvolume create /mnt/$i;
+done
+
+btrfs subvolume list /mnt
+btrfs subvolume set-default 256 /mnt # @ als default subvolume festlegen
+umount /mnt
+
+# Jetzt wird @ als neues default Subvolume gemounted
+mount /dev/mapper/arch -o compress=zstd /mnt 
+mount -m /dev/disk/by-label/BOOT /mnt/boot
+mkdir -p /mnt/boot/EFI/Linux
+mkdir /mnt/var
+
+mount -m /dev/mapper/arch -o subvol=@home,compress=zstd /mnt/home
+mount -m /dev/mapper/arch -o subvol=@root,compress=zstd /mnt/root
+mount -m /dev/mapper/arch -o subvol=@srv,compress=zstd /mnt/srv
+mount -m /dev/mapper/arch -o subvol=@cache,compress=zstd /mnt/var/cache
+mount -m /dev/mapper/arch -o subvol=@log,compress=zstd /mnt/var/log
+
+# Swapfile erzeugen
+mount -m /dev/mapper/arch -o subvol=@swap /mnt/swap
+btrfs filesystem mkswapfile --size 4g --uuid clear /mnt/swap/swapfile
+swapon /mnt/swap/swapfile
+#+end_src
+
+** Chroot und Systemkonfiguration
+Nachdem nun das grundsätzliche Layout des Systems steht, können jetzt die Pakete installiert und das System konfiguriert werden.
+
+#+begin_src sh
+
+pacstrap -K /mnt base base-devel linux linux-firmware intel-ucode systemd-ukify btrfs-progs iwd mg less tree bash-completion git
+genfstab -U /mnt >> /mnt/etc/fstab
+
+arch-chroot /mnt
+ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+hwclock --systohc
+# /etc/locale.gen editieren und mindestens de_DE.utf-8 einkommentieren
+locale-gen
+echo LANG=de_DE.UTF-8 > /etc/locale.conf
+echo KEYMAP=us > etc/vconsole.conf
+echo prox > /etc/hostname
+systemctl enable iwd.service
+# iwd Konfiguration, s. https://wiki.archlinux.org/title/Iwd#Enable_built-in_network_configuration
+systemctl enable systemd-resolved.service
+
+passwd
+
+# /etc/mkinitcpio.conf: Hooks für systemd sd-vconsole sd-encrypt hinzufügen
+# /etc/mkinitcpio.d/linux.preset: Zeilen für uki einkommentieren, image auskommentieren
+# /etc/mkinitcpio.d/linux.preset: Analog für das fallback preset, ggf. später --cmdline anpassen, und quiet entfernen
+mkdir /etc/cmdline.d
+echo 'root=/dev/mapper/arch rw' > /etc/cmdline.d/root.conf
+echo "rd.luks.name=$(blkid -s UUID -o value /dev/sda2)=arch" > /etc/cmdline.d/cryptsetup.conf
+echo 'quiet' > /etc/cmdline.d/quiet.conf # evtl. erst nach dem ersten erfolgreichen reboot
+mkinitcpio -p linux
+bootctl install # eine weitere Konfiguration ist nicht notwendig, da das UKI automatisch gefunden wird
+systemctl enable systemd-boot-update.service
+
+# btrfs-scrub aktivieren
+systemctl enable btrfs-scrub@-.timer
+systemctl enable btrfs-scrub@home.timer
+# macht das für alle subvolumes Sinn?
+
+exit
+swapoff /mnt/swap/swapfile
+umount -R /mnt
+systemctl reboot
+#+end_src
+
+Nach der Eingabe des Passworts bootet dann hoffentlich das System wie gewünscht.
+
+** SD-Karte mit Keyfile vorbereiten
+Nun wird noch die SD-Karte mit dem Keyfile vorbereitet
+
+#+begin_src sh
+fdisk
+# GPT Partitionstabelle erstellen
+# Partition 1 mit 1G für Keyfile erstellen, im Folgenden /dev/mmcblk0p1
+# Partition 2 für den Rest erstellen, im Folgenden /dev/mmcblk0p2
+
+mkfs.fat -F 32 -n PROX_KEY /dev/mmcblk0p1
+mount /dev/disk/by-label/PROX_KEY /mnt
+mkdir /mnt/luks
+openssl genrsa -out /mnt/luks/prox.key 4096
+cryptsetup luksAddKey /dev/sda2 /mnt/luks/prox.key
+echo "rd.luks.key=$(blkid -s UUID -o value /dev/sda2)=/luks/prox.key:UUID=$(blkid -s UUID -o value /dev/mmcblk0p1)" >> /etc/cmdline.d/cryptsetup.conf
+echo "rd.luks.options=$(blkid -s UUID -o value /dev/sda2)=keyfile-timeout=10s" >> /etc/cmdline.d/cryptsetup.conf
+umount /mnt
+
+# Verschlüsselten Speicher vorbereiten
+cryptsetup luksFormat /dev/mmcblk0p2
+cryptsetup config --label PROX_CRYPT /dev/sda2
+cryptsetup open /dev/disk/by-label/PROX_CRYPT prox_crypt
+mkfs.fat -F 32 -n PROX_DATA /dev/mapper/prox_crypt
+mount /dev/disk/by-label/PROX_DATA /mnt
+# Backup der Passphrase für das Hauptsystem
+cryptsetup luksHeaderBackup /dev/sda2 --header-backup-file /mnt/luks_header.img
+umount /mnt
+cryptsetup close /dev/mmcblk0p2
+#+end_src
+
+* Fazit
+Damit steht das Grundsystem.  Erfahrungen zu Secure Boot, snapper und der Installation einer grafischen Benutzeroberfläche werden erst einmal vertagt.
