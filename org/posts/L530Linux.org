@@ -33,7 +33,7 @@ Beim Layout der Subvolumes gibt es zwei grundsätzliche Varianten. [[https://arc
 @swap    /swap Enthält ein Swapfile
 #+end_src
 
-Damit sollten dann Snapshots und Rollbacks des Hauptsystems möglich sein.  Aktuell ist mir allerdings noch nicht ganz klar, wie die nicht verschlüsselte ~/boot~ Partition dabei eingebunden wird.
+Damit sollten dann Snapshots und Rollbacks des Hauptsystems möglich sein.  Aktuell ist mir allerdings noch nicht ganz klar, wie die nicht verschlüsselte ~/boot~ Partition dabei eingebunden wird.  Zusätzlich werden [[https://wiki.archlinux.org/title/Btrfs#Simple_quotas_(squotas)][Simple Quotas]] verwendet, um festzulegen, welches Subvolume wie viel Platz einnehmen darf.
 
 * Installation
 Um die Installation später einfach nachvollziehen zu können, folgt nun die vollständige Dokumentation der einzelnen Schritte:
@@ -87,9 +87,19 @@ mount -m /dev/mapper/arch -o subvol=@root,compress=zstd /mnt/root
 mount -m /dev/mapper/arch -o subvol=@srv,compress=zstd /mnt/srv
 mount -m /dev/mapper/arch -o subvol=@cache,compress=zstd /mnt/var/cache
 mount -m /dev/mapper/arch -o subvol=@log,compress=zstd /mnt/var/log
+mount -m /dev/mapper/arch -o subvol=@swap /mnt/swap
+
+# Simple Quotas
+btrfs quota enable -s /mnt # -s für simple quotas, alles andere bleibt gleich
+btrfs qgroup limit 32G /mnt
+btrfs qgroup limit 64G /mnt/home
+btrfs qgroup limit 1G /mnt/root
+btrfs qgroup limit 1G /mnt/srv
+btrfs qgroup limit 16G /mnt/var/cache
+btrfs qgroup limit 16G /mnt/var/log
+btrfs qgroup limit 4G /mnt/swap
 
 # Swapfile erzeugen
-mount -m /dev/mapper/arch -o subvol=@swap /mnt/swap
 btrfs filesystem mkswapfile --size 4g --uuid clear /mnt/swap/swapfile
 swapon /mnt/swap/swapfile
 #+end_src
@@ -98,8 +108,7 @@ swapon /mnt/swap/swapfile
 Nachdem nun das grundsätzliche Layout des Systems steht, können jetzt die Pakete installiert und das System konfiguriert werden.
 
 #+begin_src sh
-
-pacstrap -K /mnt base base-devel linux linux-firmware intel-ucode systemd-ukify btrfs-progs iwd mg less tree bash-completion git
+pacstrap -K /mnt base base-devel linux linux-firmware intel-ucode systemd-ukify dosfstools btrfs-progs iwd mg less tree bash-completion git
 genfstab -U /mnt >> /mnt/etc/fstab
 
 arch-chroot /mnt
@@ -113,15 +122,17 @@ echo prox > /etc/hostname
 systemctl enable iwd.service
 # iwd Konfiguration, s. https://wiki.archlinux.org/title/Iwd#Enable_built-in_network_configuration
 systemctl enable systemd-resolved.service
+systemctl enable systemd-timesyncd.service
 
 passwd
 
 # /etc/mkinitcpio.conf: Hooks für systemd sd-vconsole sd-encrypt hinzufügen
 # /etc/mkinitcpio.d/linux.preset: Zeilen für uki einkommentieren, image auskommentieren
-# /etc/mkinitcpio.d/linux.preset: Analog für das fallback preset, ggf. später --cmdline anpassen, und quiet entfernen
+# /etc/mkinitcpio.d/linux.preset: Analog für das fallback preset
+# /etc/mkinitcpio.d/linux.preset: Zu fallback_options '--cmdline /etc/cmdline.d/base.conf' hinzufügen -> boot ist nicht quiet
 mkdir /etc/cmdline.d
-echo 'root=/dev/mapper/arch rw' > /etc/cmdline.d/root.conf
-echo "rd.luks.name=$(blkid -s UUID -o value /dev/sda2)=arch" > /etc/cmdline.d/cryptsetup.conf
+echo 'root=/dev/mapper/arch rw' > /etc/cmdline.d/base.conf
+echo "rd.luks.name=$(blkid -s UUID -o value /dev/disk/by-label/crypt)=arch" >> /etc/cmdline.d/base.conf
 echo 'quiet' > /etc/cmdline.d/quiet.conf # evtl. erst nach dem ersten erfolgreichen reboot
 mkinitcpio -p linux
 bootctl install # eine weitere Konfiguration ist nicht notwendig, da das UKI automatisch gefunden wird
@@ -135,6 +146,7 @@ systemctl enable btrfs-scrub@home.timer
 exit
 swapoff /mnt/swap/swapfile
 umount -R /mnt
+cryptsetup close arch
 systemctl reboot
 #+end_src
 
@@ -153,21 +165,24 @@ mkfs.fat -F 32 -n PROX_KEY /dev/mmcblk0p1
 mount /dev/disk/by-label/PROX_KEY /mnt
 mkdir /mnt/luks
 openssl genrsa -out /mnt/luks/prox.key 4096
-cryptsetup luksAddKey /dev/sda2 /mnt/luks/prox.key
-echo "rd.luks.key=$(blkid -s UUID -o value /dev/sda2)=/luks/prox.key:UUID=$(blkid -s UUID -o value /dev/mmcblk0p1)" >> /etc/cmdline.d/cryptsetup.conf
-echo "rd.luks.options=$(blkid -s UUID -o value /dev/sda2)=keyfile-timeout=10s" >> /etc/cmdline.d/cryptsetup.conf
+cryptsetup luksAddKey /dev/disk/by-label/crypt /mnt/luks/prox.key
+echo "rd.luks.key=$(blkid -s UUID -o value /dev/disk/by-label/crypt)=/luks/prox.key:UUID=$(blkid -s UUID -o value /dev/disk/by-label/PROX_KEY)" >> /etc/cmdline.d/base.conf
+echo "rd.luks.options=$(blkid -s UUID -o value /dev/disk/by-label/crypt)=keyfile-timeout=10s" >> /etc/cmdline.d/base.conf
 umount /mnt
+# Das vfat Modul muss in der mkinitcpio.conf hinzugefügt werden
+mkinitcpio -p linux
+
 
 # Verschlüsselten Speicher vorbereiten
 cryptsetup luksFormat /dev/mmcblk0p2
 cryptsetup config --label PROX_CRYPT /dev/sda2
-cryptsetup open /dev/disk/by-label/PROX_CRYPT prox_crypt
-mkfs.fat -F 32 -n PROX_DATA /dev/mapper/prox_crypt
+cryptsetup open /dev/disk/by-label/PROX_CRYPT PROX_CRYPT
+mkfs.fat -F 32 -n PROX_DATA /dev/mapper/PROX_CRYPT
 mount /dev/disk/by-label/PROX_DATA /mnt
 # Backup der Passphrase für das Hauptsystem
-cryptsetup luksHeaderBackup /dev/sda2 --header-backup-file /mnt/luks_header.img
+cryptsetup luksHeaderBackup /dev/disk/by-label/crypt --header-backup-file /mnt/luks_header.img
 umount /mnt
-cryptsetup close /dev/mmcblk0p2
+cryptsetup close PROX_CRYPT
 #+end_src
 
 * Fazit
