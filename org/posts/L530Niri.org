@@ -18,7 +18,7 @@ visudo # Erlaube Mitglieder der Gruppe wheel das verwenden von sudo
 Nach dem Login mit dem neuen Benutzer werden zunächst mal die benötigten Programme installiert:
 
 #+begin_src sh
-sudo pacman -Syu alacritty brightnessctl diff-so-fancy emacs-wayland firefox fuzzel gnome-keyring gvfs hostname htop hunspell hunspell-de hunspell-en_us inetutils isync ly mako msmtp niri openssh pass pcmanfm-gtk3 ripgrep seahorse stow swaybg swayidle swaylock waybar wev wlsunset xdg-desktop-portal-gtk xdg-user-dirs xwayland-satellite
+sudo pacman -Syu alacritty brightnessctl diff-so-fancy emacs-wayland firefox fuzzel gnome-keyring gvfs hostname htop hunspell hunspell-de hunspell-en_us iptables-nft inetutils isync ly mako msmtp niri openssh pass pcmanfm-gtk3 ripgrep seahorse stow swaybg swayidle swaylock syncthing ufw waybar wev wlsunset xdg-desktop-portal-gtk xdg-user-dirs xwayland-satellite
 #+end_src
 
 Einrichten der Standardordner:
@@ -53,7 +53,9 @@ pass init fb
 
 Dann können die verschiedenen Passwörter hinzugefügt werden.
 
-In Emacs funktioniert aktuell nur das Lesen, aber nicht das Schreiben von Passwörtern mittels easy-pgp. Warum?
+** Emacs Verschlüsselung schlägt fehl
+Falls die Verschlüsselung mit dem Fehler ~Unusable public key~ fehlschlägt, sollte man zunächst prüfen, ob nicht in der gpg.conf, welche aus git installiert wurde (s. unten) ein ~default-key~ gesetzt ist.  Dieser überschreibt sämtliche Einstellungen und Auswahlen, die man in Emacs treffen kann.
+
 
 * Dotfiles klonen
 Mit ssh und gnupg eingerichtet, kann nun das Git Repository mit den verschiedenen Konfigurationen geklont werden:
@@ -169,6 +171,27 @@ Zum automatischen Schließen einiger Programme kann folgende Funktion verwendet 
 #+end_src
 
 Diese habe ich zu ~wl-folder-suspend-hook~, ~vterm-exit-functions~ und ~eshell-exit-hook~ hinzugefügt.  Wanderlust verwende ich zudem via ~wl-other-frame~.
+
+* Syncthing
+Der User-Service muss aktiviert werden
+
+#+begin_src sh
+systemctl --user enable --now syncthing.service
+#+end_src
+
+Das Webinterface ist dann unter [[http://localhost:8384][localhost:8384]] verfügbar.
+
+* UFW
+Die Installation enthält ~ufw~ und ~iptables-nft~, um die neuere netfilter Firewall zu verwenden.  Das Setup wird im [[https://wiki.archlinux.org/title/Uncomplicated_Firewall][Wiki]] gut erklärt. Die Konfiguration benötigt root Rechte:
+
+#+begin_src sh
+ufw default deny
+ufw allow from 192.168.178.0/24
+ufw allow syncthing
+ufw enable
+ufw status verbose
+#+end_src
+
 
 * Fazit
 Insgesamt zeigt sich, dass das Setup der Benutzeroberfläche, wenn man nicht auf ein vollständiges Desktop Environment wie Gnome oder KDE zurückgreift recht viel kleinteilige Konfigurationsarbeit.  Gleichzeitig funktionieren einige Dinge, wie Grafik, Audio und suspend, mit systemd, wayland und pipewire mittlerweile relativ einfach. Selbst diese grundsätzlichen Dinge waren mit X.org, alsa, etc teilweise noch recht mühsam.  Zudem bietet niri mit waybar nicht nur eine funktionale, sonder auch durchaus optisch ansprechende Umgebung. 
