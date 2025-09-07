@@ -1,0 +1,174 @@
+#+title: ThinkPad L530 - Arch Linux Setup
+#+subtitle: {{{date(%a %d.%m.%Y)}}}
+#+date: <2025-09-07 So>
+
+Nach der Installation des Grundsystems folgt nun ein kurzer Überblick über die weiteren Schritte, die nötig sind, um zu einem vollständigen System mit grafischer Oberfläche zu kommen.  Das meiste davon ist in verschiedenen Wikis gut beschrieben,  allerdings dauert es zumindest bei mir immer etwas, bis man dann alles Programme und Konfigurationen so zusammen hat, wie man sich das vorstellt.
+
+Einen guten Überblick erhält man wie immer im [[https://wiki.archlinux.org/title/General_recommendations][Arch Wiki]].
+
+* Einrichten eines Nutzers
+
+#+begin_src sh
+useradd -m -G wheel fb
+passwd fb
+visudo # Erlaube Mitglieder der Gruppe wheel das verwenden von sudo
+#+end_src
+
+* Programme
+Nach dem Login mit dem neuen Benutzer werden zunächst mal die benötigten Programme installiert:
+
+#+begin_src sh
+sudo pacman -Syu alacritty brightnessctl diff-so-fancy emacs-wayland firefox fuzzel gnome-keyring gvfs hostname htop hunspell hunspell-de hunspell-en_us inetutils isync ly mako msmtp niri openssh pass pcmanfm-gtk3 ripgrep seahorse stow swaybg swayidle swaylock waybar wev wlsunset xdg-desktop-portal-gtk xdg-user-dirs xwayland-satellite
+#+end_src
+
+Einrichten der Standardordner:
+
+#+begin_src sh
+xdg-user-dirs-update
+#+end_src
+
+
+* Einrichten von SSH
+Als nächstes wird SSH konfiguriert, um auf meinen Server zugreifen zu können und so die Konfigurationen der verschiedenen Programme abrufen zu können.  Zunächst wird der Key erzeugt:
+
+#+begin_src sh
+ssh-keygen -t ed25519 -C "fb@prox"
+#+end_src
+
+Dann muss dieser noch auf den entsprechenden Servern hinzugefügt werden.
+
+* GnuPG
+Analog zu SSH muss zunächst erst einmal ein Key generiert werden:
+
+#+begin_src sh
+systemctl --user start gnome-keyring-daemon.socket 
+gpg --full-gen-key
+#+end_src
+
+Details zum [[https://wiki.archlinux.org/title/GNOME/Keyring][gnome-keyring]]. Danach kann der password-store initialisiert werden:
+
+#+begin_src sh
+pass init fb
+#+end_src
+
+Dann können die verschiedenen Passwörter hinzugefügt werden.
+
+In Emacs funktioniert aktuell nur das Lesen, aber nicht das Schreiben von Passwörtern mittels easy-pgp. Warum?
+
+* Dotfiles klonen
+Mit ssh und gnupg eingerichtet, kann nun das Git Repository mit den verschiedenen Konfigurationen geklont werden:
+
+#+begin_src sh
+git clone git@<my-server>:/home/git/dotfiles.git
+mkdir -p ~/.local/bin
+ln -s ~/Workspace/dotfiles/.install.sh ~/.local/bin/dotfiles
+~/.local/bin/dotfiles stow bash
+#+end_src
+
+Nachdem die bash Konfiguration existiert ist ~.local/bin~ nun auch Teil des ~PATH~. Jetzt können alle weiteren Konfigurationen verlinkt werden:
+
+#+begin_src sh
+dotfiles stow ssh
+dotfiles stow git
+dotfiles stow gnupg
+mkdir -p ~/.config/emacs # verhindert, dass komplette Ordner gesymlinked wird und dann die temporären Dateien im dotfiles Projekt landen
+dotfiles stow emacs
+dotfiles stow waybar
+dotfiles stow niri
+dotfiles stow swaybg
+dotfiles stow swayidle
+dotfiles stow wlsunset
+dotfiles stow xwayland
+dotfiles stow mbsync
+dotfiles stow msmtp
+dotfiles stow pcmanfm
+#+end_src
+
+* Konfiguration des Window Managers
+Es wird der oben installierte Display Manager ~ly~ verwendet:
+
+#+begin_src sh
+sudo systemctl enable ly.service
+#+end_src
+
+Dieser erkennt niri automatisch und man kann sich direkt mit Nutzername und Password anmelden und landet in einer grafischen Benutzerumgebung.
+
+Dann werden wie [[https://github.com/YaLTeR/niri/wiki/Example-systemd-Setup][hier]] erklärt verschiedene Services als Abhängigkeiten zu niri hinzugefügt:
+
+#+begin_src sh
+systemd --user add-wants niri.service mako.service
+systemd --user add-wants niri.service waybar.service
+# Konfiguration mit Pfad zum Hintergrundbild muss angelegt werden
+systemd --user add-wants niri.service swaybg.service
+# Konfiguration von swayidle
+systemd --user add-wants niri.service swayidle.service
+systemd --user add-wants niri.service xwayland.service # xwayland-satellite
+systemd --user add-wants niri.service wlsunset.service # Zum Anpassen der Farbtemperatur des Bildschirms am Abend (wlsunset -l <lat> -L <lng>)
+systemd --user add-wants niri.service pcmanfm.service # Zum automatischen Mounten von USB-Geräten (pcmanfm --daemon-mode)
+#+end_src
+
+* Installation von yay
+Zunächst muss noch resolved konfiguriert werden:
+
+#+begin_src sh
+ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+#+end_src
+
+Danach kann yay installiert werden:
+
+#+begin_src sh
+mkdir -p ~/Workspace/aur/
+cd ~/Workspace/aur
+git clone https://aur.archlinux.org/yay.git
+cd yay
+makepkg -si
+#+end_src
+
+* Emacs Anpassung für niri
+Um Emacs zusammen mit niri als Tiling-WM zu verwenden, sollen möglichst keine Emacs eigenen Windows erzeugt werden, sondern immer eigenständige Frames, welche dann von niri verwaltet werden können.  Hierzu bedarf es einiger zusätzlicher Konfiguration in Emacs.
+
+Zunächst aber werden noch ein paar weitere git Repositories aufgesetzt:
+
+#+begin_src sh
+cd ~/Dokumente
+git clone git@<my-server>:/home/git/org.git
+cd ~/Workspace/github
+git clone git@github.com:fbrosda/fbrosda.github.io.git
+#+end_src
+
+Einen guten Überblick über die Emacs Konfiguration nur mit Frames findet man in dem Repository zum [[https://github.com/davidshepherd7/frames-only-mode][frames-only-mode]].
+
+Die grundsätzlichen Einstellungen:
+
+#+begin_src elisp
+(setopt default-frame-alist '((font . "InputMono Nerd Font Condensed 12")
+                              (vertical-scroll-bars . nil)
+                              (horizontal-scroll-bars . nil))
+        
+        display-buffer-base-action '(nil (pop-up-frames . t))
+        frame-auto-hide-function 'delete-frame
+        gdb-use-separate-io-buffer nil
+        gdb-many-windows nil
+
+        org-src-window-setup 'other-frame
+        org-agenda-window-setup 'other-frame
+
+        magit-commit-show-diff nil)
+#+end_src
+
+Zur Verwendung von ~display-buffer-base-action~ findet man [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Choosing-Window-Options.html#index-pop_002dup_002dframes_002c-replacement-for][hier]] weitere Informationen.
+
+Zum automatischen Schließen einiger Programme kann folgende Funktion verwendet werden:
+
+#+begin_src elisp
+(defun maybe-delete-frame (&optional buffer event)
+  (when (and (display-graphic-p)
+             (one-window-p)
+             (> (length (frame-list)) 1))
+    (delete-frame)))
+#+end_src
+
+Diese habe ich zu ~wl-folder-suspend-hook~, ~vterm-exit-functions~ und ~eshell-exit-hook~ hinzugefügt.  Wanderlust verwende ich zudem via ~wl-other-frame~.
+
+* Fazit
+Insgesamt zeigt sich, dass das Setup der Benutzeroberfläche, wenn man nicht auf ein vollständiges Desktop Environment wie Gnome oder KDE zurückgreift recht viel kleinteilige Konfigurationsarbeit.  Gleichzeitig funktionieren einige Dinge, wie Grafik, Audio und suspend, mit systemd, wayland und pipewire mittlerweile relativ einfach. Selbst diese grundsätzlichen Dinge waren mit X.org, alsa, etc teilweise noch recht mühsam.  Zudem bietet niri mit waybar nicht nur eine funktionale, sonder auch durchaus optisch ansprechende Umgebung. 

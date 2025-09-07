@@ -108,7 +108,7 @@ swapon /mnt/swap/swapfile
 Nachdem nun das grundsätzliche Layout des Systems steht, können jetzt die Pakete installiert und das System konfiguriert werden.
 
 #+begin_src sh
-pacstrap -K /mnt base base-devel linux linux-firmware intel-ucode systemd-ukify dosfstools btrfs-progs iwd mg less tree bash-completion git
+pacstrap -K /mnt base base-devel linux linux-firmware intel-ucode systemd-ukify dosfstools btrfs-progs iwd mg less tree bash-completion git efibootmgr vi sudo
 genfstab -U /mnt >> /mnt/etc/fstab
 
 arch-chroot /mnt
@@ -184,6 +184,16 @@ cryptsetup luksHeaderBackup /dev/disk/by-label/crypt --header-backup-file /mnt/l
 umount /mnt
 cryptsetup close PROX_CRYPT
 #+end_src
+
+** Der Kernel als EFI-Programm
+Nachdem das Booten mit systemd-bootd klappt, kann man auch den Kernel direkt aus dem EFI heraus starten und den bootloader Überspringen. Die Konfiguration erfolgt mittels ~efibootmgr~
+
+#+begin_src sh
+efibootmgr -u
+efibootmgr --create --disk /dev/sda --part 1 --loader '\EFI\Linux\arch-linux.efi' --label 'Arch Linux UKI' --unicode
+#+end_src
+
+Zusätzlich setze ich den Timeout für systemd-bootd auf 10s.  Diesen kann ich dann im Zweifel über das temporäre Bootmenü des UEFI starten.
 
 * Fazit
 Damit steht das Grundsystem.  Erfahrungen zu Secure Boot, snapper und der Installation einer grafischen Benutzeroberfläche werden erst einmal vertagt.
