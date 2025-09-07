@@ -18,7 +18,7 @@ visudo # Erlaube Mitglieder der Gruppe wheel das verwenden von sudo
 Nach dem Login mit dem neuen Benutzer werden zunächst mal die benötigten Programme installiert:
 
 #+begin_src sh
-sudo pacman -Syu alacritty brightnessctl diff-so-fancy emacs-wayland firefox fuzzel gnome-keyring gvfs hostname htop hunspell hunspell-de hunspell-en_us iptables-nft inetutils isync ly mako msmtp niri openssh pass pcmanfm-gtk3 ripgrep seahorse stow swaybg swayidle swaylock syncthing ufw waybar wev wlsunset xdg-desktop-portal-gtk xdg-user-dirs xwayland-satellite
+sudo pacman -Syu alacritty brightnessctl diff-so-fancy emacs-wayland firefox fuzzel gnome-keyring gvfs hostname htop hunspell hunspell-de hunspell-en_us iptables-nft inetutils isync libnotify ly mako msmtp niri openssh pass pcmanfm-gtk3 ripgrep seahorse stow swaybg swayidle swaylock syncthing ufw waybar wev wlsunset xdg-desktop-portal-gtk xdg-user-dirs xwayland-satellite
 #+end_src
 
 Einrichten der Standardordner:
