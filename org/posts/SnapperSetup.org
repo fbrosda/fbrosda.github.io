@@ -1,0 +1,55 @@
+#+title: ThinkPad L530 - Snapper Setup
+#+subtitle: {{{date(%a %d.%m.%Y)}}}
+#+date: <2025-09-13 Sa>
+
+Danke Copy-on-Write sind Snapshots in btrfs sehr schnell erstellt und nehmen auch erst einmal keinen Platz weg.  Gleichzeitig hat man die Möglichkeit zum Beispiel im Falle eines fehlerhaften Upgrades das System auf einen alten Stand zurückzusetzen.  Um regelmäßige Snapshots automatisch zu erstellen, bietet sich das bei SUSE entwickelte Tool Snapper an.  Das notwendige Setup ist wie gewohnt ausführlich im [[https://wiki.archlinux.org/title/Snapper][Arch Wiki]] beschrieben.  Im Folgenden ein Überblick über die notwendigen Schritte.
+
+* Snapshots des Root Dateisystems
+Die Snapper config wird mit
+
+#+begin_src sh
+snapper -c root create-config /
+#+end_src
+
+Allerdings wird dadurch ein Subvolume unter dem root-Subvolume ~@~ angelegt, welches für die Snapshots verwendet wird und unter ~/.snapshots~ gemounted wird.  Im Falles eines Rollbacks sind dann die Snapshots allerdings nicht mehr verfübar.  Deshalb wird ein Subvolume direkt unterhalb des obersten Volumes verwendet. Dazu sind die folgenden Schritte nötig:
+
+#+begin_src sh
+btrfs subvolume delete /.snapshots/
+mount -m -o subvol=/ /dev/disk/by-label/arch /mnt/btrfs/
+btrfs subvolume create /mnt/btrfs/@snapshots
+umount /mnt/btrfs
+mount -m -o subvol=/@snapshots /dev/disk/by-label/arch /.snapshots
+chmod 750 /.snapshots
+#+end_src
+
+Danach füge ich das subvolume noch zu ~/ets/fstab~ hinzu, damit es auch automatisch gemounted wird.
+
+Danach passe ich noch die Konfiguration an, damit nicht zu viele Snapshots erstellt werden und starte die systemd-timer:
+
+#+begin_src sh
+systemctl enable snapper-timeline.timer
+systemctl enable snapper-cleanup.timer
+#+end_src
+
+Zuletzt wird noch ~snap-pac~ installiert, um automatisch vor/nach einem Update Snapshots zu machen.
+
+* /boot Backups
+Da boot selbst nicht auf der btrfs Partition liegt, werden die Daten nach ~/.bootbackup~ kopiert und dort vor/nach jedem Systemupdate gesichert, wie es [[https://wiki.archlinux.org/title/System_backup#Snapshots_and_/boot_partition][hier]] beschrieben ist.
+
+* Home Snapshots
+Zum Abschluss sollen noch Snapshots von ~/home~ gemacht werden.  Das funktioniert im Grunde analog zu der Konfiguration für ~/~.  Auch hier wird das Subvolume wieder verschoben.  Leider bietet Snapper keine Möglichkeit, den Pfad anzupassen, sodass ein eigenes Subvolume verwendet werden muss.
+
+#+begin_src sh
+snapper -c home create-config /home
+btrfs subvolume delete /home/.snapshots/
+mount -m -o subvol=/ /dev/disk/by-label/arch /mnt/btrfs/
+btrfs subvolume create /mnt/btrfs/@snapshots_home
+umount /mnt/btrfs
+mount -m -o subvol=/@snapshots_home /dev/disk/by-label/arch /home/.snapshots
+chmod 750 /home/.snapshots
+#+end_src
+
+Danach wird in der Konfigurationsdatei noch eingestellt, wie viele Snapshots behalten werden sollen und damit ist es auch einfach möglich einen alten Stand von ~/home~ wieder herzustellen, sollten bspw. Dateien aus versehen gelöscht werden.
+
+* Fazit
+Die Konfiguration ist einfach und klar. Nur der Fakt, dass man das Subvolume jedes mal von Hand verschieben muss und das nicht von vornherein einstellen kann ist suboptimal.   
