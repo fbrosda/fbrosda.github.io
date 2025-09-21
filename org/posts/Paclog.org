@@ -1,0 +1,13 @@
+#+title: pacman.log Analyse
+#+subtitle: {{{date(%a %d.%m.%Y)}}}
+#+date: <2025-09-21 So>
+
+Während der Installation des [[file:L530Linux.org][Thinkpad L530]] habe ich festgestellt, dass ich auf meinem anderen privaten Laptop einem L460 den kompletten Log aller pacman Aufrufe seit der Installation im März 2016 herumliegen habe.
+
+Mit ca 11MB ist die Datei trotz allem noch recht überschaubar groß, sodass ich diese auch in Zukunft erst einmal weiter laufen lasse.  Gleichzeitig war ich neugierig darauf, was man denn mit den Daten darin so anstellen kann.
+
+Daraus ist ein kleines [[https://github.com/fbrosda/paclog][Github Repository]] entstanden, in dem ich ein paar Skripte zur Analyse der Logs erstellt habe.  Das Ergebnis ist in dem [[https://github.com/fbrosda/paclog/blob/main/paclog.ipynb][Paclog Notebook]] festgehalten.
+
+Besonders spannend finde ich auch die erzeugte [[https://github.com/fbrosda/paclog/blob/main/visualizations/timeline.svg][Timeline]] bei der man für jedes jemals installierte Paket nachschauen kann, von wann bis wann es installiert war.
+
+Da ich bereits in dem Notebook einiges beschrieben habe, bleibt es hier bei dem Verweis auf eben jenes.
