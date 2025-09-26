@@ -1,0 +1,51 @@
+#+title: L530 Rescue System
+#+subtitle: {{{date(%a %d.%m.%Y)}}}
+#+date: <2025-09-26 Fr>
+
+Auslöser für die Idee war, dass der Laptop vor ein paar Tagen beim Shutdown hing und nicht ausging.  Nach einem hard reset war beim nächsten Boot zunächst einmal alles in Ordnung.  Doch nach ein paar Minuten, konnte ich plötzlich keine Dateien mehr anlegen.  btrfs hatte aus Gründen beschlossen das Dateisystem in den read-only Mode zu versetzen.  Nach dem nächsten Reboot das selbe Spiel, zunächst einmal alles ok und nach ein paar Minuten konnte auf alle Daten nur noch lesend zugegriffen werden.  Um nun allerdings [[https://man.archlinux.org/man/btrfs-check.8.en][btrfs-check]] aufzuführen sollte die Partition nicht gemounted sein.
+
+Dazu muss man erst einmal wieder einen USB-Stick finden, auf dem noch ein Linux vorhanden ist von dem man booten kann.  Da die [[https://fbrosda.github.io/posts/L530Linux.html][Installation]] noch relativ frisch ist, war das kein größerer Aufwand trotzdem kam mir dabei die Idee, dass es doch praktisch wäre, wenn man ein einfaches Rescue System immer zur Hand hätte.  Meine Idee dazu, warum nicht das Arch Installationsmedium auf eine eigene Partition auf der SD-Karte packen, auf der sich auch der Schlüssel zum entsperren der Festplatte befindet.  Dann könnte man im Zweifel direkt davon booten.  Die Anleitung zum Erstellen eines bootfähigen USB-Sticks liefert auch direkt einen [[https://wiki.archlinux.org/title/USB_flash_installation_medium#Using_manual_formatting][Abschnitt]], wie man das Medium nur auf einer Partition installiert.
+
+Der Haken, den ich schon bei der initialen Installation festgestellt habe: Das Thinkpad kann nicht direkt von der SD-Karte booten.  Allerdings war das auch gar nicht nötig, schließlich hat der Laptop zumindest in dem Fall noch eine funktionierende ~/boot~ Partition.  Es muss nur irgendwie geschafft werden, aus dem Bootloader in das Installationsmedium auf der SD-Karte zu booten.
+
+* SD-Karte vorbereiten
+Zunächst einmal wird das [[https://archlinux.org/download/][Installationsmedium]] heruntergeladen.  Dann wird mittels fdsik eine weitere Partition auf der SD-Karte angelegt, auf die dann das ISO entpackt wird.  Die Schritte sehen dabei wie folgt aus:
+
+#+begin_src 
+mkfs.fat -F 32 -n PROX_RESCUE /dev/mmcblk0p3
+mount -m /dev/disk/by-label/PROX_RESCUE /mnt/archiso/
+bsdtar -x -f Workspace/data/archlinux-2025.09.01-x86_64.iso -C /mnt/archiso/
+#+end_src
+
+Leider habe ich bis jetzt noch keinen Weg gefunden, in systemd-boot direkt auf die SD-Karte zuzugreifen.  Stattdessen habe ich die initramdisk und den Kernel noch in die ~/boot~-Partition kopiert:
+
+#+begin_src 
+mkdir /boot/archiso
+cp /mnt/archiso/arch/boot/x86_64/* /boot/archiso/
+umount /mnt
+#+end_src
+
+* systemd-boot Eintrag
+Damit lässt sich die initramdisk direkt von der ~/boot~ Partition starten, fehlt nur noch ein passender Eintrag im bootloader unter  ~/boot/loader/entries/archiso.conf~:
+
+#+begin_src 
+title    Arch Linux Rescue System
+linux    /archiso/vmlinuz-linux
+initrd   /archiso/initramfs-linux.img
+options  archisolabel=PROX_RESCUE 
+#+end_src
+
+Eine Dokumentation der archiso Parameter findet man [[https://gitlab.archlinux.org/archlinux/mkinitcpio/mkinitcpio-archiso/-/blob/master/docs/README.bootparams][hier]].  Man kann auch die Optionen direkt aus dem Eintrag aus dem Installationsiso übernehmen, welche die passende Partition dann mittels ~archisosearchuuid~ findet.  Da die Partition jedoch sowieso ein Label hat, habe ich diese Option verwendet.
+
+Etwas unschön an dem Setup sind die zusätzlichen Dateien, die auf die ~/boot~ Partition kopiert werden müssen.  Falls es hier noch Alternativen gibt, bin ich über entsprechende Tipps dankbar.  Alternativ könnte man natürlich auch direkt auf der Festplatte eine eigene Rescue Partition anlegen, oder das ganze ISO auf eine entsprechend große ~/boot~ Partition legen, für beide Varianten müsste ich aber zunächst die Größe der bestehenden Partitionen ändern und die SD-Karte kann ich so grundsätzlich auch auf anderen PCs verwenden.
+
+* btrfs Fix
+Nach diesem etwas langwierigen Abstecher das System zu booten, konnte ich mich danach letztlich dem eigentlichen Problem widmen.  In dem Rescue System konnte ich zunächst ~btrfs check /dev/mapper/arch~ ausführen, welcher unter anderem folgenden Fehler ausgab:
+
+#+begin_src
+ERROR: errors found in extent allocation tree or chunk allocation
+#+end_src
+
+Auch wenn die Man-Page davon abrät entschied ich mich dazu als nächstes direkt ~btrfs check --repair~ zu probieren, welches glücklicherweise das Problem behoben hat.  Somit hat zunächst einmal das aufsetzen des Rescue Systems länger gedauert, als der eigentliche Fix.  Aber vielleicht erweist es sich auch in Zukunft noch als hilfreich, andererseits braucht man das hoffentlich selten.
+
+Überrascht hat mich definitiv, wie schnell man dann in btrfs noch auf solche Probleme stößt und auch wenn der Fehler am Ende schnell behoben war, war der Weg dorthin doch recht aufwendig.  Ein vergleichbares Problem hatte ich mit ext4 tatsächlich noch nie.

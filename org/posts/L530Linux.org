@@ -175,7 +175,7 @@ mkinitcpio -p linux
 
 # Verschlüsselten Speicher vorbereiten
 cryptsetup luksFormat /dev/mmcblk0p2
-cryptsetup config --label PROX_CRYPT /dev/sda2
+cryptsetup config --label PROX_CRYPT /dev/mmcblk0p2
 cryptsetup open /dev/disk/by-label/PROX_CRYPT PROX_CRYPT
 mkfs.fat -F 32 -n PROX_DATA /dev/mapper/PROX_CRYPT
 mount /dev/disk/by-label/PROX_DATA /mnt
