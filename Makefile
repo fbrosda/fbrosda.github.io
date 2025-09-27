@@ -5,7 +5,7 @@ CSS_DIR := css/
 
 all: publish
 
-publish: $(PUB_DIR)$(CSS_DIR)*.css $(PUB_DIR)$(IMG_DIR)*.webp $(PUB_DIR)$(MEDIA_DIR)*.svg $(PUB_DIR)*.ico
+publish: $(PUB_DIR)$(CSS_DIR)*.css $(PUB_DIR)$(IMG_DIR)*.webp $(PUB_DIR)$(MEDIA_DIR)*.svg $(PUB_DIR)*.ico $(PUB_DIR)*.key
 	emacs --batch --no-init --load publish.el --funcall org-publish-all
 
 $(PUB_DIR)$(IMG_DIR)%.webp: $(IMG_DIR)%.jpg | $(PUB_DIR)$(IMG_DIR)
