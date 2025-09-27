@@ -42,3 +42,4 @@ Ich freue mich jederzeit über Feedback und Kommentare.  Ich bin auf folgenden W
 - [[https://github.com/fbrosda][GitHub]]
 - [[https://www.linkedin.com/in/fabian-b-b0a28428a/][LinkedIn]]
 - [[https://www.outdooractive.com/de/member/17544636/][outdooractive]]
+- [[file:fb.key][GnuPG]]

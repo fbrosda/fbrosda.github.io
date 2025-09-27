@@ -20,6 +20,9 @@ $(PUB_DIR)$(MEDIA_DIR)%.svg: $(MEDIA_DIR)%.svg | $(PUB_DIR)$(MEDIA_DIR)
 $(PUB_DIR)%.ico: %.ico | $(PUB_DIR)
 	cp $^ $|
 
+$(PUB_DIR)%.key: %.key | $(PUB_DIR)
+	cp $^ $|
+
 $(PUB_DIR)$(IMG_DIR): | $(PUB_DIR)
 	mkdir -p $@
 
