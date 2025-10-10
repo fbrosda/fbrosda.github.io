@@ -25,9 +25,10 @@ html {
 body {
 	color: var(--fg-color);
 	background-color: var(--bg-color);
-	max-width: 54rem;
+	max-width: calc(var(--font-size) * 50);
 	margin: calc(var(--marg-vert) * 2) auto;
 	padding: 0 calc(var(--marg-hori) * 3);
+	box-sizing: border-box;
 }
 
 h1 {
@@ -195,7 +196,7 @@ img {
 	}
 }
 
-@media only screen and (min-width: 55rem) {
+@media only screen and (min-width: 800px) {
 	body {
 		border-left: 3px double var(--border-color);
 	}
