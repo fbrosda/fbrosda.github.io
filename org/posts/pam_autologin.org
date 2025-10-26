@@ -1,4 +1,4 @@
-#+title: GDM und pam_autologin
+#+title: GDM und pam-autologin
 #+subtitle: {{{date(%a %d.%m.%Y)}}}
 #+date: <2025-10-26 So>
 
@@ -7,10 +7,10 @@ Um auf meinem privaten Rechner beim Start kein Passwort für den Login eingeben 
 * GDM Setup
 Zunächst einmal verwendet der pam-Stack von GDM direkt ~system-local-login~ anstatt ~login~, wenn man also nur der Anleitung im Wiki folgt funktioniert erst einmal nichts.  Trotzdem sollte man erst mit der beschriebenen Config anfangen und sich einmalig in einer tty anmelden.  Dadurch wird das Passwort gespeichert und man kann in einer zweiten tty testen, ob das Setup grundsätzlich funktioniert.
 
-Dann kann man auch den normalen pam-Stack von GDM anpassen und entweder ~pam_autologin.so~ hinzufügen, oder aber ~system-local-login~ durch ~login~ für die Authentifizierung ersetzen.  Beides hat bei mir funktioniert, da allerdings die Bildschirmsperre den gleichen Stack verwendet, ist diese auch "kaputt" und man entsperrt den PC durch simples drücken der ENTER-Taste.  Da man dann doch hin und wieder den PC sperren möchte, würde ich empfehlen dies nicht zu tun.  Außerdem habe ich nach dem ersten Setup ~pam_autologin.so~ auch wieder aus der login config entfernt und verwende stattdessen die folgende Konfiguration.
+Dann kann man auch den normalen pam-Stack von GDM anpassen und entweder ~pam_autologin.so~ hinzufügen, oder aber ~system-local-login~ durch ~login~ für die Authentifizierung ersetzen.  Beides hat bei mir funktioniert, da allerdings die Bildschirmsperre den gleichen Stack verwendet, ist diese auch "kaputt" und man entsperrt den PC durch simples drücken der Enter-Taste.  Da man dann doch hin und wieder den PC sperren möchte, würde ich empfehlen dies nicht zu tun.  Außerdem habe ich nach dem ersten Setup ~pam_autologin.so~ auch wieder aus der login config entfernt und verwende stattdessen die folgende Konfiguration.
 
 * GDM Autologin
-Da das Ziel sowieso ist, dass man sich automatisch anmeldet, kann man pam_autologin auch direkt mit der Autologinfunktion von GDM kombinieren.  Dadurch bleibt die Bildschirmsperre intakt und man spart sich außerdem auf dem Loginscreen Enter zu drücken.  Gleichzeitig ist der Gnome Schlüsselbund dann korrekt entsperrt.  Hierzu muss man ~/etc/pam.d/gdm-autologin~ anpassen:
+Da das Ziel sowieso ist, dass man sich automatisch anmeldet, kann man pam-autologin auch direkt mit der Autologinfunktion von GDM kombinieren.  Dadurch bleibt die Bildschirmsperre intakt und man spart sich außerdem auf dem Loginscreen Enter zu drücken.  Gleichzeitig ist der Gnome Schlüsselbund dann korrekt entsperrt.  Hierzu muss man ~/etc/pam.d/gdm-autologin~ anpassen:
 
 1. ~pam_autologin.so~ muss entsprechend hinzugefügt werden
 2. ~pam_gdm.so~ muss auskommentiert werden
