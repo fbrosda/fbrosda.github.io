@@ -17,7 +17,7 @@ Da das Ziel sowieso ist, dass man sich automatisch anmeldet, kann man pam-autolo
 
 Die vollständige Konfiguration sieht dann wie folgt aus:
 
-#+begin_src 
+#+begin_src
 auth       required                    pam_autologin.so
 auth       required                    pam_shells.so
 auth       requisite                   pam_nologin.so
@@ -32,7 +32,7 @@ auth       optional                    pam_gnome_keyring.so
 * Sonstiges
 Noch ein paar weitere kleine Anpassungen.
 
-** Swaylock 
+** Swaylock
 Auch swaylock verwendet ~/etc/pam.d/login~, sodass hier ähnlich wie in GDM das Passwort nicht mehr nötig ist, wenn man pam-autologin dort aktiviert.  Um dies zu vermeiden, kann man ~system-local-login~ stattdessen in ~/etc/pam.d/swaylock~ verwenden.
 
 ** Ly
@@ -47,3 +47,25 @@ Man kann grundsätzlich die Konfiguration für pam-autologin, welche unter ~/etc
 4. ~ln -sf /path/to/autologin.conf /etc/security/autologin.conf~
 
 Der Vorteil ist, dass falls man die SD-Karte entfernt, automatisch wieder der normale Login mit Passwort funktioniert.
+
+Falls man den externen Speicher mit ~nofail~ mountet, um den Bootvorgang nicht zu unterbrechen, sollte dieser fehlen, muss GDM explizit auf den Mount warten.  Im folgenden Beispiel wird die verschlüsselte Partition via crypttab und fstab eingebunden und gdm so konfiguriert, dass der Service wartet, fall der externe Speicher verfügbar ist.  Andernfalls wird nur ein Fehler ausgegeben, das System startet aber trotzdem:
+
+~/etc/crypttab~
+
+#+begin_src
+IMIL_DATA      UUID=00000000-0000-0000-0000-000000000000    /var/imil.key:LABEL=IMIL_ROOT nofail
+#+end_src
+
+~/etc/fstab~
+
+#+begin_src
+/dev/mapper/IMIL_DATA    /run/media/fb/IMIL_DATA    vfat    defaults,nofail,x-systemd.device-timeout=10s,x-systemd.mount-timeout=10s,rw,uid=1000,gid=100,fmask=0177,dmask=0077,iocharset=iso8859-1 0 0
+#+end_src
+
+Und in ~/etc/systemd/system/gdm.service.d/override.conf~ dann:
+
+#+begin_src
+[Unit]
+After=run-media-fb-IMIL_DATA.mount
+Wants=run-media-fb-IMIL_DATA.mount
+#+end_src
