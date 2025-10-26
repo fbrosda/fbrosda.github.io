@@ -1,0 +1,49 @@
+#+title: GDM und pam_autologin
+#+subtitle: {{{date(%a %d.%m.%Y)}}}
+#+date: <2025-10-26 So>
+
+Um auf meinem privaten Rechner beim Start kein Passwort für den Login eingeben zu müssen, aber gleichzeitig den [[https://wiki.archlinux.org/title/GNOME/Keyring][GNOME Keyring]] zu entsperren, verwende ich sein einiger Zeit [[https://wiki.archlinux.org/title/Pam_autologin][pam_autologin]].  Das grundsätzliche Setup funktioniert wie im Wiki beschrieben, allerdings gibt es insbesondere mit GDM einige Besonderheiten und kleinere Anpassungen, die ich vorgenommen habe.
+
+* GDM Setup
+Zunächst einmal verwendet der pam-Stack von GDM direkt ~system-local-login~ anstatt ~login~, wenn man also nur der Anleitung im Wiki folgt funktioniert erst einmal nichts.  Trotzdem sollte man erst mit der beschriebenen Config anfangen und sich einmalig in einer tty anmelden.  Dadurch wird das Passwort gespeichert und man kann in einer zweiten tty testen, ob das Setup grundsätzlich funktioniert.
+
+Dann kann man auch den normalen pam-Stack von GDM anpassen und entweder ~pam_autologin.so~ hinzufügen, oder aber ~system-local-login~ durch ~login~ für die Authentifizierung ersetzen.  Beides hat bei mir funktioniert, da allerdings die Bildschirmsperre den gleichen Stack verwendet, ist diese auch "kaputt" und man entsperrt den PC durch simples drücken der ENTER-Taste.  Da man dann doch hin und wieder den PC sperren möchte, würde ich empfehlen dies nicht zu tun.  Außerdem habe ich nach dem ersten Setup ~pam_autologin.so~ auch wieder aus der login config entfernt und verwende stattdessen die folgende Konfiguration.
+
+* GDM Autologin
+Da das Ziel sowieso ist, dass man sich automatisch anmeldet, kann man pam_autologin auch direkt mit der Autologinfunktion von GDM kombinieren.  Dadurch bleibt die Bildschirmsperre intakt und man spart sich außerdem auf dem Loginscreen Enter zu drücken.  Gleichzeitig ist der Gnome Schlüsselbund dann korrekt entsperrt.  Hierzu muss man ~/etc/pam.d/gdm-autologin~ anpassen:
+
+1. ~pam_autologin.so~ muss entsprechend hinzugefügt werden
+2. ~pam_gdm.so~ muss auskommentiert werden
+
+Die vollständige Konfiguration sieht dann wie folgt aus:
+
+#+begin_src 
+auth       required                    pam_autologin.so
+auth       required                    pam_shells.so
+auth       requisite                   pam_nologin.so
+auth       optional                    pam_permit.so
+auth       required                    pam_env.so
+# auth       [success=ok default=1]      pam_gdm.so
+auth       optional                    pam_gnome_keyring.so
+#+end_src
+
+~pam_gdm.so~ ist grundsätzliche eine interessante Alternative, wenn man für den Benutzerlogin und LUKS das gleiche Passwort verwendet, s.a. [[https://www.reddit.com/r/Fedora/comments/jwnqq5/how_does_fedora_grab_the_luks_password_at_boot_to/][dieser reddit Post]].  Da ich LUKS allerdings mit einem Keyfile entschlüssele kommt diese Variante hier nicht in Frage.
+
+* Sonstiges
+Noch ein paar weitere kleine Anpassungen.
+
+** Swaylock 
+Auch swaylock verwendet ~/etc/pam.d/login~, sodass hier ähnlich wie in GDM das Passwort nicht mehr nötig ist, wenn man pam-autologin dort aktiviert.  Um dies zu vermeiden, kann man ~system-local-login~ stattdessen in ~/etc/pam.d/swaylock~ verwenden.
+
+** Ly
+Das Setup funktioniert wie in der originalen Doku beschrieben. Leider hat Ly zur Zeit keine Möglichkeit, den Loginprompt zu überspringen, d.h. man muss einmal Enter drücken auf dem Login Screen. Allerdings ohne ein Passwort eingegeben zu haben.
+
+** Symlink
+Man kann grundsätzlich die Konfiguration für pam-autologin, welche unter ~/etc/security/autologin.conf~ liegt, auch auf einen externen Speicher (z.B. eine SD-Karte) packen, welche dann während des Bootvorgangs gemounted wird und einen Symlink unter ~/etc/security/autologin.conf~ verwenden.  Allerdings geht dies nur, nachdem die Datei initial geschrieben wurde.  Das Vorgehen ist wie folgt
+
+1. ~touch /etc/security/autologin.conf~
+2. Login, welcher das Passwort in die Konfigurationsdatei schreibt
+3. Verschieben der Konfigurationsdatei
+4. ~ln -sf /path/to/autologin.conf /etc/security/autologin.conf~
+
+Der Vorteil ist, dass falls man die SD-Karte entfernt, automatisch wieder der normale Login mit Passwort funktioniert.
