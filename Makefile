@@ -1,15 +1,19 @@
 PUB_DIR := publish/
 MEDIA_DIR := media/
 IMG_DIR := $(MEDIA_DIR)images/
+BADGE_DIR := $(MEDIA_DIR)badges/
 CSS_DIR := css/
 
 all: publish
 
-publish: $(PUB_DIR)$(CSS_DIR)*.css $(PUB_DIR)$(IMG_DIR)*.webp $(PUB_DIR)$(MEDIA_DIR)*.svg $(PUB_DIR)*.ico $(PUB_DIR)*.key
+publish: $(PUB_DIR)$(CSS_DIR)*.css $(PUB_DIR)$(IMG_DIR)*.webp $(PUB_DIR)$(BADGE_DIR)*.gif $(PUB_DIR)$(MEDIA_DIR)*.svg $(PUB_DIR)*.ico $(PUB_DIR)*.key
 	emacs --batch --no-init --load publish.el --funcall org-publish-all
 
 $(PUB_DIR)$(IMG_DIR)%.webp: $(IMG_DIR)%.jpg | $(PUB_DIR)$(IMG_DIR)
 	mogrify -strip -auto-orient -resize '1920x1080' -format 'webp' -path $| $^
+
+$(PUB_DIR)$(BADGE_DIR)%.gif: $(BADGE_DIR)%.gif | $(PUB_DIR)$(BADGE_DIR)
+	cp $^ $|
 
 $(PUB_DIR)$(CSS_DIR)%.css: $(CSS_DIR)%.css | $(PUB_DIR)$(CSS_DIR)
 	cp $^ $|
@@ -24,6 +28,9 @@ $(PUB_DIR)%.key: %.key | $(PUB_DIR)
 	cp $^ $|
 
 $(PUB_DIR)$(IMG_DIR): | $(PUB_DIR)
+	mkdir -p $@
+
+$(PUB_DIR)$(BADGE_DIR): | $(PUB_DIR)
 	mkdir -p $@
 
 $(PUB_DIR)$(MEDIA_DIR): | $(PUB_DIR)

@@ -14,7 +14,7 @@
 	--font-family: sans-serif;
 }
 @view-transition {
-  navigation: auto;
+	navigation: auto;
 }
 html {
 	font-size: var(--font-size);
@@ -185,6 +185,24 @@ img {
 		height: calc(var(--font-size) * 1.25);
 		vertical-align: middle;
 		margin-top: -1px;
+	}
+
+	#badges {
+		display: flex;
+		flex-flow: row wrap;
+		justify-content: flex-start;
+
+		img {
+			width: 88px;
+			height: 100%;
+			margin-left: 0;
+			margin-right: var(--marg-hori);
+			margin-top: var(--marg-vert);
+
+			&:hover {
+				transform: scale(1.5);
+			}
+		}
 	}
 }
 
