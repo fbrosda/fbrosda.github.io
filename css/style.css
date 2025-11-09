@@ -26,7 +26,9 @@ body {
 	color: var(--fg-color);
 	background-color: var(--bg-color);
 	max-width: calc(var(--font-size) * 50);
-	margin: calc(var(--marg-vert) * 2) auto;
+	margin-inline: auto;
+	margin-top: 0;
+	margin-bottom: calc(var(--marg-vert) * 2);
 	padding: 0 calc(var(--marg-hori) * 3);
 	box-sizing: border-box;
 }
@@ -77,6 +79,7 @@ pre {
 	border-radius: var(--marg-hori);
 	box-shadow: var(--sh-code) 2px 2px 8px;
 	white-space: break-spaces;
+	word-wrap: break-word;
 }
 
 img {
@@ -129,6 +132,8 @@ img {
 #preamble {
 	position: sticky;
 	top: 0;
+	margin-inline: calc(var(--marg-hori) * -3);
+
 
 	ul {
 		display: flex;
@@ -138,6 +143,9 @@ img {
 		justify-content: space-between;
 		padding-left: 0;
 		background: var(--header-bar);
+		margin-top: 0;
+		padding-inline: calc(var(--marg-hori) * 3 - 8px);
+
 
 		li {
 			overflow: hidden;
@@ -199,6 +207,15 @@ img {
 @media only screen and (min-width: 800px) {
 	body {
 		border-left: 3px double var(--border-color);
+		margin-top: calc(var(--marg-vert) * 2);
+
+		#preamble {
+			margin-inline: 0;
+
+			ul {
+				padding-inline: 0;
+			}
+		}
 	}
 }
 
