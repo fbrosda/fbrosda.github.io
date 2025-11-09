@@ -133,7 +133,7 @@ img {
 	position: sticky;
 	top: 0;
 	margin-inline: calc(var(--marg-hori) * -3);
-
+	box-shadow: var(--border-color) 0px 2px 4px;
 
 	ul {
 		display: flex;
