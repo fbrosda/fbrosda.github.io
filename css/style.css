@@ -192,15 +192,22 @@ img {
 		flex-flow: row wrap;
 		justify-content: flex-start;
 
-		img {
+		a,img {
 			width: 88px;
 			height: 100%;
 			margin-left: 0;
 			margin-right: var(--marg-hori);
 			margin-top: var(--marg-vert);
+			line-height: 0;
 
 			&:hover {
 				transform: scale(1.5);
+			}
+
+			img {
+				margin: 0;
+				vertical-align: initial;
+				height: 100%;
 			}
 		}
 	}
