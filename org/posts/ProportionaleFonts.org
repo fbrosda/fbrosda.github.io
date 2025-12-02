@@ -1,7 +1,7 @@
 #+title: Proportionale Fonts zum Programmieren
 #+subtitle: {{{date(%a %d.%m.%Y)}}}
 #+date: <2025-12-02 Di>
-#+HTML_HEAD: <style>.src-js, .src-scheme {font-family: sans !important;}</style>
+#+HTML_HEAD_EXTRA: <style>.src-js, .src-scheme {font-family: sans !important;}</style>
 
 Eine kleine Übersicht, dass man auch proportionale Fonts zum Programmieren verwenden kann, warum das gar keine so schlechte Idee ist und wie man Emacs dafür konfiguriert.
 
