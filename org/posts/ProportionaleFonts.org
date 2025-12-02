@@ -1,0 +1,102 @@
+#+title: Proportionale Fonts zum Programmieren
+#+subtitle: {{{date(%a %d.%m.%Y)}}}
+#+date: <2025-12-02 So>
+#+HTML_HEAD: <style>.src-js, .src-scheme {font-family: sans !important;}</style>
+
+Eine kleine Übersicht, dass man auch proportionale Fonts zum Programmieren verwenden kann, warum das gar keine so schlechte Idee ist und wie man Emacs dafür konfiguriert.
+
+* Code und proportionale Fonts
+Die ursprüngliche Idee, proportionale Fonts zu testen, kam mir beim Lesen des Papers zu [[https://doc.cat-v.org/plan_9/4th_edition/papers/acme/][Acme]], dem Plan 9 Code Editor.  Grundsätzlich verbringt man beim Programmieren mehr Zeit damit, den Code zu lesen, anstatt neuen Code zu schreiben. Wie man unter anderem [[https://ux.stackexchange.com/questions/48753/does-the-use-of-monospaced-fonts-negatively-affect-legibility-of-article-text][hier]] nachlesen kann, scheinen proportionale Schriften grundsätzlich besser lesbar zu sein, als die Monospace Variante.  Somit liegt es nahe, dass man auch Code mit proportionalen Schriften rendered.  Gleichzeitig ist Programmcode natürlich ein Fließtext und weist einige Besonderheiten, etwa die Einrückungen, Klammern oder Sonderzeichen, auf, welche berücksichtigt werden müssen.
+
+* Proportionale Fonts speziell für Code
+** Einrückungen
+Zunächst einmal sind Einrückungen am Zeilenanfang unabhängig von der Schriftart gar kein Problem, solange dort immer z.B. Leerzeichen verwendet werden.  Solange das gleiche Zeichen und davon gleich viele verwendet werden, sind zwei aufeinander folgende Zeilen auch perfekt untereinander ausgerichtet.  Betrachtet man das folgende Beispiel
+
+#+begin_src js
+function f() {
+    const a = 21;
+    const b = 2;
+    return a*b;
+}
+#+end_src
+
+dann ist zwar der Funktionskörper nicht exakt vier Zeichen nach rechts verschoben im Bezug auf ~function~, aber die Zeilen passen zueinander und sind gut lesbar.
+
+Schwieriger wird es dagegen, wenn verschiedene Zeilen untereinander ausgerichtet werden sollen, an deren Anfang unterschiedliche Zeichen stehen, bspw. in Scheme
+
+#+begin_src scheme
+  (define (f)
+    (let ((a 21)
+          (b 2))
+      (* a b)))
+#+end_src
+
+Hier sollten ~a~ und ~b~ direkt untereinander stehen, was in proportionalen Fonts leider zunächst einmal nicht der Fall ist.  Hier wären [[https://nick-gravgaard.com/elastic-tabstops/][Elastic tabstops]] eine elegante Lösung, die leider jedoch recht spärlich unterstützt werden.  Allerdings gibt es mit [[https://github.com/jyp/elastic-modes][elastic-modes]] ein Emacs-Paket, welches die Ausrichtung am Zeilenanfang mittels des ~elastic-indent-modes~ fixed, indem die Breite der Leerzeichen jeweils an die Breite der darüber liegenden Zeichen angepasst wird.
+
+** Sonderzeichen
+Für eine gute Lesbarkeit, sollten bestimmte Zeichen wie iIl, oder O und 0 leicht zu unterscheiden sein.  Insbesondere bei Code ist nicht immer aus dem Kontext klar, welches Zeichen nun gemeint ist, sodass hier eine deutliche optische Unterscheidung um so wichtiger ist. Darüber hinaus sind in normalen proportionalen Fonts insbesondere Klammern extrem schmal.  Hier hilft nur, eine entsprechende Schriftart zu wählen, welche auf diese besonderen Anforderungen eingeht.  Persönlich habe ich hier mit [[https://input.djr.com/][Input]] sehr gute Erfahrungen gemacht.
+
+Letztlich unterscheidet sich dieser Abschnitt nicht zwischen monospace und proportionalen Schriftarten, wenn man nur einmal schaut, wie viele unterschiedliche es gibt und am Ende entscheidet hier der persönliche Geschmack, oder vielleicht auch die Gewohnheit.
+
+* Emacs Konfiguration
+Nach diesem kurzen allgemeinen Überblick nun noch kurz zum Editor Setup.  Denn trotz allem reicht es nicht aus, nur die Schriftart zu ändern.  Es gibt zumindest in Emacs dann doch noch die einen oder anderen Ecken und Kanten, die angepasst werden wollen :-).
+
+Zunächst zu den Schriftarten.  Neben der proportionalen Schrift, passe ich auch die Monospace Schrift an. Da beide die gleiche Zeilenhöhe haben und zumindest im Durchschnitt fast die gleiche Breite, ändert sich beim Umschalten das Layout nur minimal und der Text springt kaum, wenn man zwischen den beiden Varianten wechselt:
+
+#+begin_src elisp
+;; early-init.el
+(setq default-frame-alist '((font . "InputMono Nerd Font Condensed 13")))
+
+;; custom.el
+(custom-set-faces
+ '(fixed-pitch ((t (:family "InputMono Nerd Font Condensed"))))
+ '(variable-pitch ((t (:family "InputSans Nerd Font Condensed")))))
+#+end_src
+
+Um die proportionale Schrift zu aktivieren, verwende ich den Minor-Mode ~variable-pitch-mode~. Das hat den Vorteil, dass man relativ leicht pro Major-Mode oder auch pro Buffer umschalten kann, sollte dies nötig sein. Mit der unten aufgeführten Liste an Mode-Hooks habe ich gute Erfahrungen gemacht, keine Modes einzubinden, in denen die Textausrichtung entscheidend ist.  Nur ~magit-mode~ und ~proced-mode~ erben von ~special-mode~ und müssen deshalb explizit deaktiviert werden:
+
+#+begin_src elisp
+(dolist (hook '(prog-mode-hook compilation-mode-hook conf-mode-hook
+                text-mode-hook special-mode-hook minibuffer-mode-hook))
+  (add-hook hook #'variable-pitch-mode))
+
+(defun disable-variable-pitch () (variable-pitch-mode -1))
+(dolist (hook '(magit-log-mode-hook proced-mode-hook))
+  (add-hook hook #'disable-variable-pitch))
+#+end_src
+
+Genau deshalb habe ich auch noch ein Keybinding eingefügt, um die Font direkt umzuschalten:
+
+#+begin_src elisp
+(keymap-global-set "<f8>" #'variable-pitch-mode)
+#+end_src
+
+Darüber hinaus verwende ich das [[https://protesilaos.com/emacs/modus-themes][modus-operandi Theme]], welche auch noch ein paar spezielle Einstellungen für proportionale Fonts bietet.  Zum einen aktiviere ich die proportionalen Fonts für sämtliche UI-Elemente, zum anderen deaktiviere ich Monospace-Fonts für Code Blöcke.  Dies ist ansonsten noch eine interessante Alternative, falls man nur Fließtext proportional, aber Programmcode weiter monospaced darstellen möchte:
+
+#+begin_src elisp
+(setopt modus-themes-variable-pitch-ui t
+        modus-themes-mixed-fonts nil)
+(load-theme 'modus-operandi-tinted)
+#+end_src
+
+Zu guter Letzt noch der bereits oben erwähnte ~elastic-indent-mode~. Leider ist dieser nicht auf Melpa verfügbar, aber mit Emacs 30 kann auch ~:vc~ in use-package verwendet werden.  Mit ~elastic-indent-fontify~ deaktiviere ich das farbliche hervorheben der Einrückung, welches ich persönlich schrecklich finde.  Zum anderen weißt der Mode noch einen kleinen Bug auf, falls man Tabs und Leerzeichen gemischt verwendet, wie es in der Standardkonfiguration von Emacs der Fall ist.  Hier wird mittels ~elastic-tools-adjust-start~ dafür gesorgt, dass nicht nur die aktuelle Zeile neu eingerückt wird, sondern der vollständige Codeblock, bis zum Toplevel.  Andernfalls wird die Zeile zunächst falsch eingerückt:
+
+#+begin_src elisp
+;; Elastic Indent for Lisp/Scheme
+(defun elastic-tools-adjust-start (args)
+  (cons (save-excursion
+          (goto-char (car args))
+          (while (ignore-errors (backward-up-list) t))
+          (point))
+        (cdr args)))
+
+(use-package elastic-indent
+  :vc (:url "https://github.com/jyp/elastic-modes"
+       :rev :newest)
+  :hook ((scheme-mode lisp-data-mode))
+  :custom (elastic-indent-fontify nil)
+  :config
+  (advice-add 'elastic-tools-after-change-function :filter-args #'elastic-tools-adjust-start))
+#+end_src
+
+Insgesamt bin ich mit diesem Setup nun schon einige Monate sehr zufrieden.  Ob dabei eine tatsächlich messbare Steigerung der Produktivität erreicht wird, ist zwar zumindest fraglich, allerdings empfinde ich persönlich den Text so tatsächlich angenehmer zu lesen.
