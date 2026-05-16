@@ -103,6 +103,9 @@ current project."
            :html-head-include-default-style nil
            :with-toc nil
            :section-numbers nil
+           :html-divs ((preamble "nav" "preamble")
+                       (content "main" "content")
+                       (postamble "footer" "postamble"))
            :html-postamble ,postamble-format
            :html-preamble ,preamble-format)
           ("rss"
