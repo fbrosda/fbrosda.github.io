@@ -11,6 +11,7 @@
 	--bg-code: #ede7db;
 	--sh-code: #cab9af;
 	--font-size: 16px;
+	--font-size-s: calc(var(--font-size) * 1.25 - 2px);
 	--marg-vert: calc(var(--font-size) * 0.75);
 	--marg-hori: calc(var(--font-size) * 0.5);
 	--font-family: sans-serif;
@@ -62,7 +63,7 @@ h3 {
 }
 
 h4 {
-	font-size: calc(var(--font-size) * 1.25 - 2px);
+	font-size: calc(var(--font-size) * 1.125);
 	font-weight: normal;
 }
 
@@ -233,7 +234,7 @@ img {
 			text-overflow: ellipsis;
 
 			a {
-				padding: 10px;
+				padding: var(--marg-vert) var(--marg-hori);
 				background: var(--header-btn);
 				color: var(--fg-color);
 				text-decoration: none;
@@ -277,7 +278,7 @@ img {
 		flex-flow: row wrap;
 		justify-content: flex-start;
 
-		a,img {
+		a {
 			width: 88px;
 			height: 100%;
 			margin-left: 0;
@@ -320,7 +321,7 @@ img {
 
 		a {
 			display: block;
-			font-size: calc(var(--font-size) * 1.25 - 2px);
+			font-size: var(--font-size-s);
 		}
 	}
 }
