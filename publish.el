@@ -1,11 +1,11 @@
 ;; User data
 (setq user-full-name "Fabian Brosda"
       user-mail-address "fabian.brosda@gmail.com"
-      user-home-address "Missener Str. 7 1/2, 87509 Immenstadt, Deutschland"
+      user-home-address "Jägerweg 3, 87545 Burgberg, Deutschland"
       user-blog-domain "http://fbrosda.github.io")
 
 ;; Org publish configuration
-(add-to-list 'load-path "./bin")
+(add-to-list 'load-path (expand-file-name "bin" (file-name-directory load-file-name)))
 
 (require 'project)
 (require 'ox-publish)
@@ -50,7 +50,7 @@ current project."
 
 (defun sitemap-function (title list)
   (concat "#+TITLE: " title "\n"
-          "#+DATE: " (format-time-string "<%Y-%m-%d %a>" (current-time)) "\n"
+           "#+DATE: " (format-time-string "<%a %d.%m.%Y>" (current-time)) "\n"
           "#+HTML_CONTENT_CLASS: sitemap\n"
           "Eine alphabetisch sortierte Liste aller verfasster Artikel:\n\n"
 	      (org-list-to-org
@@ -60,12 +60,11 @@ current project."
             list))))
 
 (defun sitemap-format-entry (filename style project)
-  (if (string-prefix-p "posts/" filename)
-      (let ((title (org-publish-find-title filename project))
-            (date (format-time-string "%a %d %B %Y"
-                                      (org-publish-find-date filename project))))
-        (format "[[file:%s][%s]] %s" filename  title date))
-    nil))
+  (when (string-prefix-p "posts/" filename)
+    (let ((title (org-publish-find-title filename project))
+          (date (format-time-string "%a %d %B %Y"
+                                    (org-publish-find-date filename project))))
+      (format "[[file:%s][%s]] %s" filename  title date))))
 
 (let* ((project-root-dir (project-root (project-current)))
        (publishing-dir (expand-file-name "publish/" project-root-dir))
@@ -73,9 +72,9 @@ current project."
        (posts-dir (expand-file-name "posts/" content-dir))
        (css-source "<link rel=\"stylesheet\" type=\"text/css\" href=\"/css/style.css\" />")
        (preamble-format (file-to-string "tmpl/header.html" project-root-dir))
-       (postamble-format (file-to-string "tmpl/footer.html" project-root-dir)))
-  (setq make-backup-files nil
-        org-html-doctype "html5"
+       (postamble-format (file-to-string "tmpl/footer.html" project-root-dir))
+       (make-backup-files nil))
+  (setq org-html-doctype "html5"
         org-html-htmlize-output-type 'inline-css
         org-html-metadata-timestamp-format "%a %d.%m.%Y"
         org-confirm-babel-evaluate nil
