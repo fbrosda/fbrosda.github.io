@@ -1,0 +1,132 @@
+#+title: Opencode Sandbox
+#+subtitle: {{{date(%a %d.%m.%Y)}}}
+#+date: <2026-05-17 So>
+
+Dieser Artikel gibt eine kurze Übersicht, wie man Opencode in einem [[https://wiki.archlinux.org/title/Systemd-nspawn][systemd-nspawn]] Container ausführen kann.
+
+* Motivation
+Zunächst einmal ist es mittlerweile bekannt, dass man aus Sicherheitsgründen Coding Agents am besten in einer isolierten Umgebung ausführt.  Hierzu gibt es verschiedene Anleitungen, u.a. [[https://www.innoq.com/en/blog/2025/12/dev-sandbox/][hier]].  Neben dem bereits verlinkten Wiki findet man speziell zu dev containern basieren auf Systemd-nspawn auch [[https://adamgradzki.com/lightweight-development-sandboxes-with-systemd-nspawn-on-linux.html][hier]] eine gute Anleitung.
+
+Im Folgenden die notwendigen Schritte um auf Arch Linux einen minimalen Container mit einem opencode Server zu starten, auf den man sich dann von außen verbinden kann.
+
+* nftables
+Sollte man nftables als Firewall verwenden, benötigt man ein paar zusätzliche Regeln.
+
+** input chain
+#+begin_src conf
+chain input {
+...
+
+iifname "ve-*" udp dport bootps accept comment "allow DHCP from containers"
+...
+}
+#+end_src
+
+** forward chain
+#+begin_src conf
+chain forward {
+type filter hook forward priority filter
+policy drop
+
+ct state invalid drop
+ct state established,related accept comment "allow tracked forwards"
+
+iifname "ve-*" ip daddr @container-lan-allow accept comment "allow explicitly permitted LAN targets"
+iifname "ve-*" ip daddr @LANv4 drop comment "block LAN access"
+iifname "ve-*" meta l4proto { tcp, udp } th dport domain accept comment "allow DNS"
+iifname "ve-*" udp dport ntp accept comment "allow NTP"
+iifname "ve-*" tcp dport { http, https } accept comment "allow HTTP/HTTPS"
+}
+#+end_src
+
+* Netzwerk
+Um dem Container Internetzugriff zu ermöglichen ist das einfachste, auf dem host ~systemd-networkd~ zu starten.
+
+#+begin_src sh
+systemd enable --now systemd-networkd.service
+#+end_src
+
+Dieser Daemon managed die veth Verbindung und lässt sich auf problemlos parallel zu z.B. NetworkManager verwenden.
+
+* Container Setup
+#+begin_src sh
+mkdir /var/lib/machines/opencode
+pacstrap -K -c /var/lib/machines/opencode/ base base-devel less git opencode
+#+end_src
+
+Danach kann man den Container bereits starten
+
+#+begin_src sh
+machinectl start opencode
+machinectl shell opencode
+#+end_src
+
+Die folgenden Befehle werden jetzt innerhalb des Containers ausgeführt:
+
+#+begin_src sh
+systemctl enable --now systemd-networkd.service
+systemctl enable --now systemd-resolved.service
+#+end_src
+
+An dieser Stelle sollte eine Internetverbindung aus dem Container heraus möglich sein.  Wenn man die obigen Firewallregeln verwendet ist allerdings kein ~ping~ aus dem Container heraus möglich.
+
+Zusätzlich kann man noch einen unprivilegierten User anlegen:
+
+#+begin_src sh
+useradd -m fb
+mkdir /home/fb/Workspace
+chown fb /home/fb/Workspace
+#+end_src
+
+* opencode Service
+Um den opencode Service innerhalb des Containers automatisch zu starten wird ein systemd service angelegt unter ~/etc/systemd/system/opencode.service~:
+
+#+begin_src conf
+[Unit]
+Description=OpenCode Server
+After=network.target
+
+[Service]
+Type=simple
+User=fb
+WorkingDirectory=/home/fb/Workspace
+ExecStart=/usr/bin/opencode serve --hostname 0.0.0.0 --port 4096
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+#+end_src
+
+#+begin_src sh
+systemctl enable --now opencode.service
+#+end_src
+
+
+* nspawn config
+Zusätzlich benötigt man auf dem host noch eine [[https://www.man7.org/linux/man-pages/man5/systemd.nspawn.5.html][nspawn Konfiguration]], um die verschiedenen Verzeichnisse in den Container zu mounten und um den port auf dem host zur Verfügung zu stellen. Diese wird unter ~/etc/systemd/nspawn/opencode.nspawn~ angelegt:
+
+#+begin_src conf
+[Exec]
+PrivateUsers=pick
+
+[Files]
+Bind=/home/fb/.config/opencode:/home/bot/.config/opencode:idmap
+BindReadOnly=/home/fb/.config/opencode/opencode.json:/home/bot/.config/opencode/opencode.json:idmap
+Bind=/home/fb/Workspace/project:/home/bot/Workspace/project:idmap
+
+[Network]
+VirtualEthernet=yes
+Port=tcp:4096:4096
+
+[ResourceControl]
+MemoryMax=2G
+TasksMax=512
+#+end_src
+
+* optional: host Eintrag
+Je nach dem, ob man den server über die Lan-IP anspricht, oder noch einen hostnamen vergeben will, kann man einen Eintrag in ~/etc/hosts~ hinzufügen, bspw:
+
+#+begin_src
+192.168.178.20 opencode.lan
+#+end_src
