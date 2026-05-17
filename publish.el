@@ -72,9 +72,9 @@ current project."
        (posts-dir (expand-file-name "posts/" content-dir))
        (css-source "<link rel=\"stylesheet\" type=\"text/css\" href=\"/css/style.css\" />")
        (preamble-format (file-to-string "tmpl/header.html" project-root-dir))
-       (postamble-format (file-to-string "tmpl/footer.html" project-root-dir))
-       (make-backup-files nil))
-  (setq org-html-doctype "html5"
+       (postamble-format (file-to-string "tmpl/footer.html" project-root-dir)))
+  (setq make-backup-files nil
+        org-html-doctype "html5"
         org-html-htmlize-output-type 'inline-css
         org-html-metadata-timestamp-format "%a %d.%m.%Y"
         org-confirm-babel-evaluate nil

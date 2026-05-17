@@ -340,6 +340,11 @@ img {
 			border-radius: var(--marg-hori);
 			border: 1px solid var(--border-color);
 
+			nav {
+				border-bottom-left-radius: var(--marg-hori);
+				border-bottom-right-radius: var(--marg-hori);
+			}
+
 			ul {
 				padding-inline: 0;
 			}
