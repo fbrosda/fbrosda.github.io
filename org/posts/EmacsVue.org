@@ -1,0 +1,47 @@
+#+title: Vue-Language-Server in Emacs
+#+subtitle: {{{date(%a %d.%m.%Y)}}}
+#+date: <2026-05-19 Di>
+
+Wer schon versucht hat für die [[https://vuejs.org/][Vue.js]] Entwicklung in emacs eglot und den [[https://github.com/vuejs/language-tools/tree/master/packages/language-server][vue-language-server]] zu verwenden, hatte vermutlich mit verschiedenen Problemen zu kämpfen, wie man auch in [[https://github.com/joaotavora/eglot/discussions/1184][dieser Diskussion]] nachlesen kann.  Seit der Version 3.0 ist die Verwendung via eglot leider gar nicht mehr möglich. Deshalb hier ein kleiner Tip als Alternative.
+
+* Web-Mode
+Zunächst einmal bietet web-mode auch hervorragendes Syntax-Highlighting an, sodass man sich den meiner Erfahrung nach eher instabilen ~vue-mode~ komplett sparen kann.  Die Konfiguration ist denkbar einfach, nur die Einrückungen in Vue.js sind bei mir etwas anders als in normalen HTML-Dateien, weshalb einige Variablen speziell für Vue.js gesetzt werden:
+
+#+begin_src elisp
+(defun web-mode-indent-opt ()
+  (setq-local tab-width 2
+              indent-tabs-mode t)
+  (when (string-suffix-p ".vue" (or buffer-file-name ""))
+    (setq-local web-mode-code-indent-offset 2
+                web-mode-css-indent-offset 2
+                web-mode-script-padding 0
+                web-mode-style-padding 0)))
+
+(use-package web-mode
+  :ensure t
+  :mode ("\\.html?$"
+         "\\.jspf?$"
+         "\\.inc$"
+         "\\.vue$")
+  :bind (:map web-mode-map
+              ("C-c C-v" . browse-url-of-buffer))
+  :hook (web-mode . web-mode-indent-opt)
+  :custom
+  (web-mode-enable-auto-indentation nil)
+  (web-mode-markup-indent-offset 2))
+#+end_src
+
+* eglot
+Die für mich größere Erkenntnis war allerdings, dass bereits der [[https://github.com/typescript-language-server/typescript-language-server][typescript-language-server]] mit dem [[https://github.com/vuejs/language-tools/tree/master/packages/typescript-plugin][@vue/typescript-plugin]] bereits hervorragenden Support für den am meisten editierten Teil, nämlich das Javascript bietet.  Dieser läuft bis jetzt stabil und zuverlässig und ist in meinen Augen eine völlig ausreichende Alternative zu dem vue-language-server:
+
+#+begin_src elisp
+(add-to-list 'eglot-server-programs
+             `((web-mode :language-id "vue") . ("typescript-language-server" "--stdio"
+                                                :initializationOptions
+                                                (:plugins [(:name "@vue/typescript-plugin"
+                                                            :location ,(string-trim (shell-command-to-string "npm list --global --parseable @vue/typescript-plugin | head -n1"))
+                                                            :languages ["vue"])]))))
+#+end_src
+
+Zusätzlich zu der Konfiguration muss das @vue/typescript-plugin noch global installiert werden und schon hat man eine mehr als brauchbare Umgebung für die Vue.js Entwicklung.
+
