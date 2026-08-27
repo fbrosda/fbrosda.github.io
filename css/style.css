@@ -345,6 +345,10 @@ img {
 				border-bottom-right-radius: var(--marg-hori);
 			}
 
+			menu {
+				flex-flow: row wrap;
+			}
+
 			ul {
 				padding-inline: 0;
 			}
