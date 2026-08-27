@@ -1,0 +1,43 @@
+#+title: Emacs: dabbrev-capf
+#+subtitle: {{{date(%a %d.%m.%Y)}}}
+#+date: <2026-08-27 Do>
+
+[[https://www.gnu.org/software/emacs/manual/html_node/emacs/Dynamic-Abbrevs.html][dabbrev]] ist ein praktischer Fallback, falls komplexere Autovervollständigung bspw. basierend auf einem LSP-Server fehlschlägt. Leider ist die normale [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Symbol-Completion.html][Autovervollständigung]] und dabbrev zunächst einmal getrennt, sodass man nicht direkt via TAB auf beide Vervollständigungen zurückgreifen kann.
+
+Zum Glück ist ~completion-at-point~ via ~completion-at-point-functions~ konfigurierbar und es gibt ~dabbrev-capf~ die genau für diesen Zweck verfügbar ist. Nachdem diese zunächst [[https://lists.gnu.org/archive/html/bug-gnu-emacs/2023-02/msg00209.html][kaputt]] war, hab ich das emacs 31.1 Release zum Anlass genommen, das noch einmal zu testen.
+
+Dabei stellt sich heraus, dass das Setup dann doch nicht ganz so einfach ist.
+
+* ~:exclusive 'no~
+Der erste Versuch war schlicht ~(add-hook 'completion-at-point-functions #'dabbrev-capf)~ in die Konfiguration aufzunehmen.  Dies schlägt allerdings fehl, da die meisten major-modes eine eigene capf (z.B. ~elisp-completion-at-point~) definieren. Zwar wird der hook mit ~'local~ als viertem Argument hinzugefügt, sodass grundsätzlich auch die globalen hooks ausgeführt werden, allerdings wird ~run-hook-wrapped~ verwendet.
+
+Dies bricht die Ausführung bei dem ersten non-nil Rückgabewert ab und die Logik ist grundsätzlich so, dass standardmäßig geprüft wird, ob eine eine ~capf~ angewendet werden kann, allerdings wenn diese keine Ergebnisse liefert, wird keine weitere ausgeführt.  Hierzu gibt es die zusätzliche Option ~:exclusive 'no~, die allerdings bei den meisten capf nicht gesetzt ist.
+
+Die Lösung hier ist ein advice, der den Wrapper so anpasst, dass alle ~capf~ mit ~:exclusive 'no~ versehen werden.  Da ~completion-at-point~ und ~completion-preview~ jeweils einen eigenen Wrapper definieren, müssen beide angepasst werden.
+
+* Autoload
+Danach wird bereits erfolgreich versucht ~dabbrev-capf~ aufzurufen, allerdings schlägt dies zunächst noch fehl, da kein autoload dafür definiert ist. Zum Glück lässt sich dies mit ~:commands~ von use-package einfach beheben.
+
+* Vollständige Konfiguration
+Insbesondere der erste Fehler hat einige Zeit gebraucht, um diesen zu finden, auch wenn rückblickend die Dokumentation eigentlich recht klar und präzise ist.  Die Logik, dass bei keinen Ergebnissen standardmäßig keine weiteren completions ausprobiert werden ist meiner Meinung nach ziemlich unintuitiv und der Usecase davon erschließt sich mir nicht ganz.  Aber zum Glück lassen sich in emacs solche Dinge recht einfach überschreiben.
+
+Die vollständige Konfiguration findet sich unten:
+
+#+begin_src elisp
+(defun capf-fallthrough-advice (args)
+  "Add :exclusive 'no to capf result before wrapper processes it."
+  (let ((fun (car args)))
+    (cons (lambda (&rest _)
+            (let ((res (ignore-errors (funcall fun))))
+              (when (and res (consp res) (not (functionp res)))
+                (plist-put (nthcdr 3 res) :exclusive 'no))
+              res))
+          (cdr args))))
+
+(use-package dabbrev
+  :commands dabbrev-capf
+  :init
+  (add-hook 'completion-at-point-functions #'dabbrev-capf)
+  (advice-add 'completion--capf-wrapper :filter-args #'capf-fallthrough-advice)
+  (advice-add 'completion-preview--capf-wrapper :filter-args #'capf-fallthrough-advice))
+#+end_src
